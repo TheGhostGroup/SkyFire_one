@@ -100,7 +100,7 @@ void BattlegroundRL::HandleKillPlayer(Player* player, Player *killer)
         return;
     }
 
-    Battleground::HandleKillPlayer(player,killer);
+    Battleground::HandleKillPlayer(player, killer);
 
     UpdateArenaWorldState();
     CheckArenaWinConditions();
@@ -108,7 +108,7 @@ void BattlegroundRL::HandleKillPlayer(Player* player, Player *killer)
 
 bool BattlegroundRL::HandlePlayerUnderMap(Player* player)
 {
-    player->TeleportTo(GetMapId(),1285.810547,1667.896851,39.957642,player->GetOrientation(),false);
+    player->TeleportTo(GetMapId(), 1285.810547, 1667.896851, 39.957642, player->GetOrientation(), false);
     return true;
 }
 
@@ -132,7 +132,7 @@ void BattlegroundRL::HandleAreaTrigger(Player *Source, uint32 Trigger)
     }
 
     //if (buff_guid)
-    //    HandleTriggerBuff(buff_guid,Source);
+    //    HandleTriggerBuff(buff_guid, Source);
 }
 
 void BattlegroundRL::FillInitialWorldStates(WorldPacket &data)

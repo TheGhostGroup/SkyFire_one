@@ -38,7 +38,7 @@ void WorldSession::HandleBattlemasterHelloOpcode(WorldPacket & recv_data)
 {
     uint64 guid;
     recv_data >> guid;
-    sLog->outDebug("WORLD: Recvd CMSG_BATTLEMASTER_HELLO Message from (GUID: %u TypeId:%u)", GUID_LOPART(guid),GuidHigh2TypeId(GUID_HIPART(guid)));
+    sLog->outDebug("WORLD: Recvd CMSG_BATTLEMASTER_HELLO Message from (GUID: %u TypeId:%u)", GUID_LOPART(guid), GuidHigh2TypeId(GUID_HIPART(guid)));
 
     Creature *unit = GetPlayer()->GetMap()->GetCreature(guid);
     if (!unit)
@@ -85,7 +85,7 @@ void WorldSession::HandleBattlemasterJoinOpcode(WorldPacket & recv_data)
 
     if (!sBattlemasterListStore.LookupEntry(bgTypeId_))
     {
-        sLog->outError("Battleground: invalid bgtype (%u) received. possible cheater? player guid %u",bgTypeId_,_player->GetGUIDLow());
+        sLog->outError("Battleground: invalid bgtype (%u) received. possible cheater? player guid %u", bgTypeId_, _player->GetGUIDLow());
         return;
     }
 
@@ -111,7 +111,7 @@ void WorldSession::HandleBattlemasterJoinOpcode(WorldPacket & recv_data)
         return;
 
     // expected bracket entry
-    PvPDifficultyEntry const* bracketEntry = GetBattlegroundBracketByLevel(bg->GetMapId(),_player->getLevel());
+    PvPDifficultyEntry const* bracketEntry = GetBattlegroundBracketByLevel(bg->GetMapId(), _player->getLevel());
     if (!bracketEntry)
         return;
 
@@ -154,7 +154,7 @@ void WorldSession::HandleBattlemasterJoinOpcode(WorldPacket & recv_data)
                                                             // send status packet (in queue)
         sBattlegroundMgr->BuildBattlegroundStatusPacket(&data, bg, queueSlot, STATUS_WAIT_QUEUE, avgTime, 0, ginfo->ArenaType);
         SendPacket(&data);
-        sLog->outDebug("Battleground: player joined queue for bg queue type %u bg type %u: GUID %u, NAME %s",bgQueueTypeId,bgTypeId,_player->GetGUIDLow(), _player->GetName());
+        sLog->outDebug("Battleground: player joined queue for bg queue type %u bg type %u: GUID %u, NAME %s", bgQueueTypeId, bgTypeId, _player->GetGUIDLow(), _player->GetName());
     }
     else
     {
@@ -200,7 +200,7 @@ void WorldSession::HandleBattlemasterJoinOpcode(WorldPacket & recv_data)
             member->GetSession()->SendPacket(&data);
             sBattlegroundMgr->BuildGroupJoinedBattlegroundPacket(&data, err);
             member->GetSession()->SendPacket(&data);
-            sLog->outDebug("Battleground: player joined queue for bg queue type %u bg type %u: GUID %u, NAME %s",bgQueueTypeId,bgTypeId,member->GetGUIDLow(), member->GetName());
+            sLog->outDebug("Battleground: player joined queue for bg queue type %u bg type %u: GUID %u, NAME %s", bgQueueTypeId, bgTypeId, member->GetGUIDLow(), member->GetName());
         }
         sLog->outDebug("Battleground: group end");
     }
@@ -368,7 +368,7 @@ void WorldSession::HandleBattleFieldPortOpcode(WorldPacket &recv_data)
     }
 
     // expected bracket entry
-    PvPDifficultyEntry const* bracketEntry = GetBattlegroundBracketByLevel(bg->GetMapId(),_player->getLevel());
+    PvPDifficultyEntry const* bracketEntry = GetBattlegroundBracketByLevel(bg->GetMapId(), _player->getLevel());
     if (!bracketEntry)
         return;
 
@@ -433,7 +433,7 @@ void WorldSession::HandleBattleFieldPortOpcode(WorldPacket &recv_data)
             // bg->HandleBeforeTeleportToBattleground(_player);
             sBattlegroundMgr->SendToBattleground(_player, ginfo.IsInvitedToBGInstanceGUID, bgTypeId);
             // add only in HandleMoveWorldPortAck()
-            // bg->AddPlayer(_player,team);
+            // bg->AddPlayer(_player, team);
             sLog->outDebug("Battleground: player %s (%u) joined battle for bg %u, bgtype %u, queue type %u.", _player->GetName(), _player->GetGUIDLow(), bg->GetInstanceID(), bg->GetTypeID(), bgQueueTypeId);
             break;
         case 0:                                         // leave queue
@@ -533,7 +533,7 @@ void WorldSession::HandleBattlefieldStatusOpcode(WorldPacket & /*recv_data*/)
                 continue;
 
             // expected bracket entry
-            PvPDifficultyEntry const* bracketEntry = GetBattlegroundBracketByLevel(bg->GetMapId(),_player->getLevel());
+            PvPDifficultyEntry const* bracketEntry = GetBattlegroundBracketByLevel(bg->GetMapId(), _player->getLevel());
             if (!bracketEntry)
                 continue;
 
@@ -642,7 +642,7 @@ void WorldSession::HandleBattlemasterJoinArena(WorldPacket & recv_data)
 
     BattlegroundTypeId bgTypeId = bg->GetTypeID();
     BattlegroundQueueTypeId bgQueueTypeId = BattlegroundMgr::BGQueueTypeId(bgTypeId, arenatype);
-    PvPDifficultyEntry const* bracketEntry = GetBattlegroundBracketByLevel(bg->GetMapId(),_player->getLevel());
+    PvPDifficultyEntry const* bracketEntry = GetBattlegroundBracketByLevel(bg->GetMapId(), _player->getLevel());
     if (!bracketEntry)
         return;
 
@@ -715,7 +715,7 @@ void WorldSession::HandleBattlemasterJoinArena(WorldPacket & recv_data)
             sLog->outDebug("Battleground: arena join as group start");
             if (isRated)
             {
-                sLog->outDebug("Battleground: arena team id %u, leader %s queued with rating %u for type %u",_player->GetArenaTeamId(arenaslot),_player->GetName(),arenaRating,arenatype);
+                sLog->outDebug("Battleground: arena team id %u, leader %s queued with rating %u for type %u", _player->GetArenaTeamId(arenaslot), _player->GetName(), arenaRating, arenatype);
                 bg->SetRated(true);
             }
             else
@@ -748,7 +748,7 @@ void WorldSession::HandleBattlemasterJoinArena(WorldPacket & recv_data)
             member->GetSession()->SendPacket(&data);
             sBattlegroundMgr->BuildGroupJoinedBattlegroundPacket(&data, err);
             member->GetSession()->SendPacket(&data);
-            sLog->outDebug("Battleground: player joined queue for arena as group bg queue type %u bg type %u: GUID %u, NAME %s",bgQueueTypeId,bgTypeId,member->GetGUIDLow(), member->GetName());
+            sLog->outDebug("Battleground: player joined queue for arena as group bg queue type %u bg type %u: GUID %u, NAME %s", bgQueueTypeId, bgTypeId, member->GetGUIDLow(), member->GetName());
         }
     }
     else
@@ -761,7 +761,7 @@ void WorldSession::HandleBattlemasterJoinArena(WorldPacket & recv_data)
         // send status packet (in queue)
         sBattlegroundMgr->BuildBattlegroundStatusPacket(&data, bg, queueSlot, STATUS_WAIT_QUEUE, avgTime, 0, arenatype);
         SendPacket(&data);
-        sLog->outDebug("Battleground: player joined queue for arena, skirmish, bg queue type %u bg type %u: GUID %u, NAME %s",bgQueueTypeId,bgTypeId,_player->GetGUIDLow(), _player->GetName());
+        sLog->outDebug("Battleground: player joined queue for arena, skirmish, bg queue type %u bg type %u: GUID %u, NAME %s", bgQueueTypeId, bgTypeId, _player->GetGUIDLow(), _player->GetName());
     }
     sBattlegroundMgr->ScheduleQueueUpdate(arenaRating, arenatype, bgQueueTypeId, bgTypeId, bracketEntry->GetBracketId());
 }

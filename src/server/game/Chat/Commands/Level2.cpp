@@ -4021,14 +4021,14 @@ bool ChatHandler::HandleNpcAddFormationCommand(const char* args)
 
     group_member                 = new FormationInfo;
     group_member->follow_angle   = (creature->GetAngle(chr) - chr->GetOrientation()) * 180 / M_PI;
-    group_member->follow_dist    = sqrtf(pow(chr->GetPositionX() - creature->GetPositionX(),int(2))+pow(chr->GetPositionY()-creature->GetPositionY(),int(2)));
+    group_member->follow_dist    = sqrtf(pow(chr->GetPositionX() - creature->GetPositionX(), int(2))+pow(chr->GetPositionY()-creature->GetPositionY(), int(2)));
     group_member->leaderGUID     = leaderGUID;
     group_member->groupAI        = 0;
 
     CreatureGroupMap[lowguid] = group_member;
     creature->SearchFormation();
 
-    WorldDatabase.PExecuteLog("INSERT INTO creature_formations (leaderGUID, memberGUID, dist, angle, groupAI) VALUES ('%u','%u','%f', '%f', '%u')",
+    WorldDatabase.PExecuteLog("INSERT INTO creature_formations (leaderGUID, memberGUID, dist, angle, groupAI) VALUES ('%u', '%u', '%f', '%f', '%u')",
         leaderGUID, lowguid, group_member->follow_dist, group_member->follow_angle, group_member->groupAI);
 
     PSendSysMessage("Creature %u added to formation with leader %u", lowguid, leaderGUID);

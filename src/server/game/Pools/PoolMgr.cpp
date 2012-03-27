@@ -299,7 +299,7 @@ void PoolGroup<Creature>::Spawn1Object(PoolObject* obj)
         if (!map->Instanceable() && map->IsLoaded(data->posX, data->posY))
         {
             Creature* creature = new Creature;
-            //sLog->outDebug("Spawning creature %u",guid);
+            //sLog->outDebug("Spawning creature %u", guid);
             if (!creature->LoadFromDB(obj->guid, map))
             {
                 delete creature;
@@ -395,7 +395,7 @@ void PoolMgr::LoadFromDB()
 
     mPoolTemplate.resize(max_pool_id + 1);
 
-    result = WorldDatabase.Query("SELECT entry,max_limit FROM pool_template");
+    result = WorldDatabase.Query("SELECT entry, max_limit FROM pool_template");
     if (!result)
     {
         mPoolTemplate.clear();

@@ -34,7 +34,7 @@ void WorldSession::HandleInspectArenaTeamsOpcode(WorldPacket & recv_data)
 
     uint64 guid;
     recv_data >> guid;
-    sLog->outDebug("Inspect Arena stats (GUID: %u TypeId: %u)", GUID_LOPART(guid),GuidHigh2TypeId(GUID_HIPART(guid)));
+    sLog->outDebug("Inspect Arena stats (GUID: %u TypeId: %u)", GUID_LOPART(guid), GuidHigh2TypeId(GUID_HIPART(guid)));
 
     if (Player *plr = sObjectMgr->GetPlayer(guid))
     {
@@ -177,7 +177,7 @@ void WorldSession::HandleArenaTeamAcceptOpcode(WorldPacket & /*recv_data*/)
     if (!at->AddMember(_player->GetGUID()))
     {
         // arena team not found
-        SendArenaTeamCommandResult(ERR_ARENA_TEAM_CREATE_S,"","",ERR_ARENA_TEAM_INTERNAL);
+        SendArenaTeamCommandResult(ERR_ARENA_TEAM_CREATE_S, "", "", ERR_ARENA_TEAM_INTERNAL);
         return;
     }
 
@@ -344,7 +344,7 @@ void WorldSession::SendNotInArenaTeamPacket(uint8 type)
     uint32 unk = 0;
     data << uint32(unk);                                    // unk(0)
     if (!unk)
-        data << uint8(type);                                // team type (2=2v2,3=3v3,5=5v5), can be used for custom types...
+        data << uint8(type);                                // team type (2=2v2, 3=3v3, 5=5v5), can be used for custom types...
     SendPacket(&data);
 }
 

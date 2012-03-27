@@ -14754,7 +14754,7 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
             currentBg->EventPlayerLoggedIn(this, GetGUID());
             currentBg->AddOrSetPlayerToCorrectBgGroup(this, GetGUID(), m_bgData.bgTeam);
 
-            SetInviteForBattlegroundQueueType(bgQueueTypeId,currentBg->GetInstanceID());
+            SetInviteForBattlegroundQueueType(bgQueueTypeId, currentBg->GetInstanceID());
         }
 
         // Mixed battlegrounds
@@ -14780,7 +14780,7 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
 
             if (mapId == MAPID_INVALID) // Battleground Entry Point not found (???)
             {
-                sLog->outError("Player (guidlow %d) was in BG in database, but BG was not found, and entry point was invalid! Teleport to default race/class locations.",guid);
+                sLog->outError("Player (guidlow %d) was in BG in database, but BG was not found, and entry point was invalid! Teleport to default race/class locations.", guid);
                 RelocateToHomebind();
             }
             else
@@ -15437,7 +15437,7 @@ void Player::_LoadInventory(QueryResult_AutoPtr result, uint32 timediff)
                         itr->second->StoreItem(slot, item, true);
                     else
                     {
-                        sLog->outError("Player::_LoadInventory: Player %s has item (GUID: %u Entry: %u) can't be loaded to inventory (Bag GUID: %u Slot: %u) by reason %u.", GetName(),item_guid, item_id, bag_guid, slot, result);
+                        sLog->outError("Player::_LoadInventory: Player %s has item (GUID: %u Entry: %u) can't be loaded to inventory (Bag GUID: %u Slot: %u) by reason %u.", GetName(), item_guid, item_id, bag_guid, slot, result);
                         success = false;
                     }
                 }
@@ -16909,10 +16909,10 @@ void Player::SendAttackSwingNotInRange()
 void Player::SavePositionInDB(uint32 mapid, float x, float y, float z, float o, uint32 zone, uint64 guid)
 {
     std::ostringstream ss;
-    ss << "UPDATE characters SET position_x='"<<x<<"',position_y='"<<y
-       << "',position_z='"<<z<<"',orientation='"<<o<<"',map='"<<mapid
-       << "',zone='"<<zone<<"',trans_x='0',trans_y='0',trans_z='0',"
-       << "transguid='0',taxi_path='' WHERE guid='"<< GUID_LOPART(guid) <<"'";
+    ss << "UPDATE characters SET position_x='"<<x<<"', position_y='"<<y
+       << "', position_z='"<<z<<"', orientation='"<<o<<"', map='"<<mapid
+       << "', zone='"<<zone<<"', trans_x='0', trans_y='0', trans_z='0', "
+       << "transguid='0', taxi_path='' WHERE guid='"<< GUID_LOPART(guid) <<"'";
     sLog->outDebug(ss.str().c_str());
     CharacterDatabase.Execute(ss.str().c_str());
 }

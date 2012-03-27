@@ -1081,7 +1081,7 @@ void GameEventMgr::GameEventSpawn(int16 event_id)
 
     if (internal_event_id < 0 || internal_event_id >= mGameEventPoolIds.size())
     {
-        sLog->outError("GameEventMgr::GameEventSpawn attempt access to out of range mGameEventPoolIds element %i (size: " SIZEFMTD ")",internal_event_id,mGameEventPoolIds.size());
+        sLog->outError("GameEventMgr::GameEventSpawn attempt access to out of range mGameEventPoolIds element %i (size: " SIZEFMTD ")", internal_event_id, mGameEventPoolIds.size());
         return;
     }
 

@@ -74,7 +74,7 @@ Channel::Channel(const std::string& name, uint32 channel_id, uint32 Team)
                     uint64 banned_guid = atol((*iter).c_str());
                     if (banned_guid)
                     {
-                        sLog->outDebug("Channel(%s) loaded banned guid: %u",name.c_str(), banned_guid);
+                        sLog->outDebug("Channel(%s) loaded banned guid: %u", name.c_str(), banned_guid);
                         banned.insert(banned_guid);
                     }
                 }
@@ -559,7 +559,7 @@ void Channel::List(Player* player)
             }
         }
 
-        data.put<uint32>(pos,count);
+        data.put<uint32>(pos, count);
 
         SendToOne(&data, p);
     }

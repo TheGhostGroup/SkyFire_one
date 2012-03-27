@@ -44,22 +44,22 @@ namespace Trinity
                 : i_msgtype(msgtype), i_textId(textId), i_source(source), i_args(args) {}
             void operator()(WorldPacket& data, int32 loc_idx)
             {
-                char const* text = sObjectMgr->GetSkyFireString(i_textId,loc_idx);
+                char const* text = sObjectMgr->GetSkyFireString(i_textId, loc_idx);
 
                 if (i_args)
                 {
                     // we need copy va_list before use or original va_list will corrupted
                     va_list ap;
-                    va_copy(ap,*i_args);
+                    va_copy(ap, *i_args);
 
                     char str [2048];
-                    vsnprintf(str,2048,text, ap);
+                    vsnprintf(str, 2048, text, ap);
                     va_end(ap);
 
-                    do_helper(data,&str[0]);
+                    do_helper(data, &str[0]);
                 }
                 else
-                    do_helper(data,text);
+                    do_helper(data, text);
             }
         private:
             void do_helper(WorldPacket& data, char const* text)
@@ -89,12 +89,12 @@ namespace Trinity
                 : i_msgtype(msgtype), i_textId(textId), i_source(source), i_arg1(arg1), i_arg2(arg2) {}
             void operator()(WorldPacket& data, int32 loc_idx)
             {
-                char const* text = sObjectMgr->GetSkyFireString(i_textId,loc_idx);
-                char const* arg1str = i_arg1 ? sObjectMgr->GetSkyFireString(i_arg1,loc_idx) : "";
-                char const* arg2str = i_arg2 ? sObjectMgr->GetSkyFireString(i_arg2,loc_idx) : "";
+                char const* text = sObjectMgr->GetSkyFireString(i_textId, loc_idx);
+                char const* arg1str = i_arg1 ? sObjectMgr->GetSkyFireString(i_arg1, loc_idx) : "";
+                char const* arg2str = i_arg2 ? sObjectMgr->GetSkyFireString(i_arg2, loc_idx) : "";
 
                 char str [2048];
-                snprintf(str,2048,text, arg1str, arg2str);
+                snprintf(str, 2048, text, arg1str, arg2str);
 
                 uint64 target_guid = i_source  ? i_source ->GetGUID() : 0;
 
@@ -217,10 +217,10 @@ Battleground::~Battleground()
     if (GetInstanceID())                                    // not spam by useless queries in case BG templates
     {
         // delete creature and go respawn times
-        WorldDatabase.PExecute("DELETE FROM creature_respawn WHERE instance = '%u'",GetInstanceID());
-        WorldDatabase.PExecute("DELETE FROM gameobject_respawn WHERE instance = '%u'",GetInstanceID());
+        WorldDatabase.PExecute("DELETE FROM creature_respawn WHERE instance = '%u'", GetInstanceID());
+        WorldDatabase.PExecute("DELETE FROM gameobject_respawn WHERE instance = '%u'", GetInstanceID());
         // delete instance from db
-        CharacterDatabase.PExecute("DELETE FROM instance WHERE id = '%u'",GetInstanceID());
+        CharacterDatabase.PExecute("DELETE FROM instance WHERE id = '%u'", GetInstanceID());
         // remove from battlegrounds
     }
 
@@ -603,7 +603,7 @@ void Battleground::YellToAll(Creature* creature, const char* text, uint32 langua
             sLog->outError("Battleground: Player " UI64FMTD " not found!", itr->first);
             continue;
         }
-        creature->BuildMonsterChat(&data,CHAT_MSG_MONSTER_YELL,text,language,creature->GetName(),itr->first);
+        creature->BuildMonsterChat(&data, CHAT_MSG_MONSTER_YELL, text, language, creature->GetName(), itr->first);
         plr->GetSession()->SendPacket(&data);
     }
 }
@@ -782,11 +782,11 @@ void Battleground::EndBattleground(uint32 winner)
                 //if (member)
                     //plr->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_WIN_RATED_ARENA, member->personal_rating);
 
-                winner_arena_team->MemberWon(plr,loser_rating);
+                winner_arena_team->MemberWon(plr, loser_rating);
             }
             else
             {
-                loser_arena_team->MemberLost(plr,winner_rating);
+                loser_arena_team->MemberLost(plr, winner_rating);
 
                 // Arena lost => reset the win_rated_arena having the "no_loose" condition
                 //plr->GetAchievementMgr().ResetAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_WIN_RATED_ARENA, ACHIEVEMENT_CRITERIA_CONDITION_NO_LOOSE);
@@ -940,7 +940,7 @@ void Battleground::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
                     ArenaTeam * winner_arena_team = sObjectMgr->GetArenaTeamById(GetArenaTeamIdForTeam(GetOtherTeam(team)));
                     ArenaTeam * loser_arena_team = sObjectMgr->GetArenaTeamById(GetArenaTeamIdForTeam(team));
                     if (winner_arena_team && loser_arena_team && winner_arena_team != loser_arena_team)
-                        loser_arena_team->MemberLost(plr,winner_arena_team->GetRating());
+                        loser_arena_team->MemberLost(plr, winner_arena_team->GetRating());
                 }
             }
             if (SendPacket)
@@ -1090,16 +1090,16 @@ void Battleground::AddPlayer(Player *plr)
         if (team == ALLIANCE)                                // gold
         {
             if (plr->GetTeam() == HORDE)
-                plr->CastSpell(plr, SPELL_HORDE_GOLD_FLAG,true);
+                plr->CastSpell(plr, SPELL_HORDE_GOLD_FLAG, true);
             else
-                plr->CastSpell(plr, SPELL_ALLIANCE_GOLD_FLAG,true);
+                plr->CastSpell(plr, SPELL_ALLIANCE_GOLD_FLAG, true);
         }
         else                                                // green
         {
             if (plr->GetTeam() == HORDE)
-                plr->CastSpell(plr, SPELL_HORDE_GREEN_FLAG,true);
+                plr->CastSpell(plr, SPELL_HORDE_GREEN_FLAG, true);
             else
-                plr->CastSpell(plr, SPELL_ALLIANCE_GREEN_FLAG,true);
+                plr->CastSpell(plr, SPELL_ALLIANCE_GREEN_FLAG, true);
         }
 
         plr->DestroyConjuredItems(true);
@@ -1368,8 +1368,8 @@ bool Battleground::AddObject(uint32 type, uint32 entry, float x, float y, float 
     // and when loading it (in go::LoadFromDB()), a new guid would be assigned to the object, and a new object would be created
     // so we must create it specific for this instance
     GameObject * go = new GameObject;
-    if (!go->Create(sObjectMgr->GenerateLowGuid(HIGHGUID_GAMEOBJECT),entry, GetBgMap(),
-        PHASEMASK_NORMAL, x,y,z,o,rotation0,rotation1,rotation2,rotation3,100,GO_STATE_READY))
+    if (!go->Create(sObjectMgr->GenerateLowGuid(HIGHGUID_GAMEOBJECT), entry, GetBgMap(),
+        PHASEMASK_NORMAL, x, y, z, o, rotation0, rotation1, rotation2, rotation3, 100, GO_STATE_READY))
     {
         sLog->outErrorDb("Gameobject template %u not found in database! Battleground not created!", entry);
         sLog->outError("Cannot create gameobject template %u! Battleground not created!", entry);
@@ -1444,7 +1444,7 @@ GameObject* Battleground::GetBGObject(uint32 type)
 {
     GameObject *obj = GetBgMap()->GetGameObject(m_BgObjects[type]);
     if (!obj)
-        sLog->outError("couldn't get gameobject %i",type);
+        sLog->outError("couldn't get gameobject %i", type);
     return obj;
 }
 
@@ -1452,7 +1452,7 @@ Creature* Battleground::GetBGCreature(uint32 type)
 {
     Creature *creature = GetBgMap()->GetCreature(m_BgCreatures[type]);
     if (!creature)
-        sLog->outError("couldn't get creature %i",type);
+        sLog->outError("couldn't get creature %i", type);
     return creature;
 }
 
@@ -1494,7 +1494,7 @@ Creature* Battleground::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
     Creature* pCreature = new Creature;
     if (!pCreature->Create(sObjectMgr->GenerateLowGuid(HIGHGUID_UNIT), map, PHASEMASK_NORMAL, entry, 0, teamval, x, y, z, o))
     {
-        sLog->outError("Can't create creature entry: %u",entry);
+        sLog->outError("Can't create creature entry: %u", entry);
         delete pCreature;
         return NULL;
     }
@@ -1522,7 +1522,7 @@ Creature* Battleground::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
 /*
 void Battleground::SpawnBGCreature(uint32 type, uint32 respawntime)
 {
-    Map * map = sMapMgr.FindMap(GetMapId(),GetInstanceId());
+    Map * map = sMapMgr.FindMap(GetMapId(), GetInstanceId());
     if (!map)
         return false;
 
@@ -1557,7 +1557,7 @@ bool Battleground::DelCreature(uint32 type)
     Creature *cr = GetBgMap()->GetCreature(m_BgCreatures[type]);
     if (!cr)
     {
-        sLog->outError("Can't find creature guid: %u",GUID_LOPART(m_BgCreatures[type]));
+        sLog->outError("Can't find creature guid: %u", GUID_LOPART(m_BgCreatures[type]));
         return false;
     }
     cr->AddObjectToRemoveList();
@@ -1573,7 +1573,7 @@ bool Battleground::DelObject(uint32 type)
     GameObject *obj = GetBgMap()->GetGameObject(m_BgObjects[type]);
     if (!obj)
     {
-        sLog->outError("Can't find gobject guid: %u",GUID_LOPART(m_BgObjects[type]));
+        sLog->outError("Can't find gobject guid: %u", GUID_LOPART(m_BgObjects[type]));
         return false;
     }
     obj->SetRespawnTime(0);                                 // not save respawn time
@@ -1591,7 +1591,7 @@ bool Battleground::AddSpiritGuide(uint32 type, float x, float y, float z, float 
     else
         entry = BG_CREATURE_ENTRY_H_SPIRITGUIDE;
 
-    Creature* pCreature = AddCreature(entry,type,team,x,y,z,o);
+    Creature* pCreature = AddCreature(entry, type, team, x, y, z, o);
     if (!pCreature)
     {
         sLog->outError("Can't create Spirit guide. Battleground not created!");
@@ -1640,7 +1640,7 @@ void Battleground::SendWarningToAll(int32 entry, ...)
     va_list ap;
     char str [1024];
     va_start(ap, entry);
-    vsnprintf(str,1024,format, ap);
+    vsnprintf(str, 1024, format, ap);
     va_end(ap);
     std::string msg = (std::string)str;
 
@@ -1700,7 +1700,7 @@ void Battleground::HandleTriggerBuff(uint64 const& go_guid)
         index--;
     if (index < 0)
     {
-        sLog->outError("Battleground (Type: %u) has buff gameobject (Guid: %u Entry: %u Type:%u) but it hasn't that object in its internal data",GetTypeID(true),GUID_LOPART(go_guid),obj->GetEntry(),obj->GetGoType());
+        sLog->outError("Battleground (Type: %u) has buff gameobject (Guid: %u Entry: %u Type:%u) but it hasn't that object in its internal data", GetTypeID(true), GUID_LOPART(go_guid), obj->GetEntry(), obj->GetGoType());
         return;
     }
 
