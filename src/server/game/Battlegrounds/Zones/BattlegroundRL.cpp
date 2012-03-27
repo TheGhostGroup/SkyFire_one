@@ -1,12 +1,11 @@
 /*
- * Copyright (C) 2010-2012 Project SkyFire <http://www.projectskyfire.org/>
- * Copyright (C) 2010-2012 Oregon <http://www.oregoncore.com/>
+ * Copyright (C) 2011-2012 Project SkyFire <http://www.projectskyfire.org/>
  * Copyright (C) 2008-2012 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
+ * Free Software Foundation; either version 3 of the License, or (at your
  * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
@@ -18,16 +17,15 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Object.h"
-#include "Player.h"
 #include "Battleground.h"
-#include "BattleGroundRL.h"
-#include "Creature.h"
-#include "ObjectMgr.h"
-#include "MapManager.h"
+#include "BattlegroundRL.h"
 #include "Language.h"
+#include "Object.h"
+#include "ObjectMgr.h"
+#include "Player.h"
+#include "WorldPacket.h"
 
-BattleGroundRL::BattleGroundRL()
+BattlegroundRL::BattlegroundRL()
 {
     m_BgObjects.resize(BG_RL_OBJECT_MAX);
 
@@ -42,22 +40,27 @@ BattleGroundRL::BattleGroundRL()
     m_StartMessageIds[BG_STARTING_EVENT_FOURTH] = LANG_ARENA_HAS_BEGUN;
 }
 
-BattleGroundRL::~BattleGroundRL()
+BattlegroundRL::~BattlegroundRL()
 {
 }
 
-void BattleGroundRL::Update(time_t diff)
+void BattlegroundRL::Update(uint32 diff)
 {
-    BattleGround::Update(diff);
+    Battleground::Update(diff);
+
+    /*if (GetStatus() == STATUS_IN_PROGRESS)
+    {
+        // update something
+    }*/
 }
 
-void BattleGroundRL::StartingEventCloseDoors()
+void BattlegroundRL::StartingEventCloseDoors()
 {
     for (uint32 i = BG_RL_OBJECT_DOOR_1; i <= BG_RL_OBJECT_DOOR_2; ++i)
         SpawnBGObject(i, RESPAWN_IMMEDIATELY);
 }
 
-void BattleGroundRL::StartingEventOpenDoors()
+void BattlegroundRL::StartingEventOpenDoors()
 {
     for (uint32 i = BG_RL_OBJECT_DOOR_1; i <= BG_RL_OBJECT_DOOR_2; ++i)
         DoorOpen(i);
@@ -66,30 +69,27 @@ void BattleGroundRL::StartingEventOpenDoors()
         SpawnBGObject(i, 60);
 }
 
-void BattleGroundRL::AddPlayer(Player *plr)
+void BattlegroundRL::AddPlayer(Player *plr)
 {
-    BattleGround::AddPlayer(plr);
+    Battleground::AddPlayer(plr);
     //create score and add it to map, default values are set in constructor
-    BattleGroundRLScore* sc = new BattleGroundRLScore;
+    BattlegroundRLScore* sc = new BattlegroundRLScore;
 
     m_PlayerScores[plr->GetGUID()] = sc;
 
-    UpdateWorldState(0xbb8, GetAlivePlayersCountByTeam(ALLIANCE));
-    UpdateWorldState(0xbb9, GetAlivePlayersCountByTeam(HORDE));
+    UpdateArenaWorldState();
 }
 
-void BattleGroundRL::RemovePlayer(Player* /*plr*/, uint64 /*guid*/)
+void BattlegroundRL::RemovePlayer(Player* /*plr*/, uint64 /*guid*/)
 {
     if (GetStatus() == STATUS_WAIT_LEAVE)
         return;
 
-    UpdateWorldState(0xbb8, GetAlivePlayersCountByTeam(ALLIANCE));
-    UpdateWorldState(0xbb9, GetAlivePlayersCountByTeam(HORDE));
-
+    UpdateArenaWorldState();
     CheckArenaWinConditions();
 }
 
-void BattleGroundRL::HandleKillPlayer(Player* player, Player* killer)
+void BattlegroundRL::HandleKillPlayer(Player *player, Player *killer)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;
@@ -100,21 +100,19 @@ void BattleGroundRL::HandleKillPlayer(Player* player, Player* killer)
         return;
     }
 
-    BattleGround::HandleKillPlayer(player, killer);
+    Battleground::HandleKillPlayer(player,killer);
 
-    UpdateWorldState(0xbb8, GetAlivePlayersCountByTeam(ALLIANCE));
-    UpdateWorldState(0xbb9, GetAlivePlayersCountByTeam(HORDE));
-
+    UpdateArenaWorldState();
     CheckArenaWinConditions();
 }
 
-bool BattleGroundRL::HandlePlayerUnderMap(Player* player)
+bool BattlegroundRL::HandlePlayerUnderMap(Player *player)
 {
-    player->TeleportTo(GetMapId(), 1285.810547, 1667.896851, 39.957642, player->GetOrientation(), false);
+    player->TeleportTo(GetMapId(),1285.810547,1667.896851,39.957642,player->GetOrientation(),false);
     return true;
 }
 
-void BattleGroundRL::HandleAreaTrigger(Player *Source, uint32 Trigger)
+void BattlegroundRL::HandleAreaTrigger(Player *Source, uint32 Trigger)
 {
     // this is wrong way to implement these things. On official it done by gameobject spell cast.
     if (GetStatus() != STATUS_IN_PROGRESS)
@@ -122,7 +120,7 @@ void BattleGroundRL::HandleAreaTrigger(Player *Source, uint32 Trigger)
 
     //uint32 SpellId = 0;
     //uint64 buff_guid = 0;
-    switch (Trigger)
+    switch(Trigger)
     {
         case 4696:                                          // buff trigger?
         case 4697:                                          // buff trigger?
@@ -134,24 +132,25 @@ void BattleGroundRL::HandleAreaTrigger(Player *Source, uint32 Trigger)
     }
 
     //if (buff_guid)
-    //    HandleTriggerBuff(buff_guid, Source);
+    //    HandleTriggerBuff(buff_guid,Source);
 }
 
-void BattleGroundRL::FillInitialWorldStates(WorldPacket &data)
+void BattlegroundRL::FillInitialWorldStates(WorldPacket &data)
 {
-    data << uint32(0xbb8) << uint32(GetAlivePlayersCountByTeam(ALLIANCE));           // 7
-    data << uint32(0xbb9) << uint32(GetAlivePlayersCountByTeam(HORDE));           // 8
     data << uint32(0xbba) << uint32(1);           // 9
+    UpdateArenaWorldState();
 }
 
-void BattleGroundRL::ResetBGSubclass()
+void BattlegroundRL::Reset()
 {
+    //call parent's reset
+    Battleground::Reset();
 }
 
-bool BattleGroundRL::SetupBattleGround()
+bool BattlegroundRL::SetupBattleground()
 {
     // gates
-    if (  !AddObject(BG_RL_OBJECT_DOOR_1, BG_RL_OBJECT_TYPE_DOOR_1, 1293.561, 1601.938, 31.60557, -1.457349, 0, 0, -0.6658813, 0.7460576, RESPAWN_IMMEDIATELY)
+    if (!AddObject(BG_RL_OBJECT_DOOR_1, BG_RL_OBJECT_TYPE_DOOR_1, 1293.561, 1601.938, 31.60557, -1.457349, 0, 0, -0.6658813, 0.7460576, RESPAWN_IMMEDIATELY)
         || !AddObject(BG_RL_OBJECT_DOOR_2, BG_RL_OBJECT_TYPE_DOOR_2, 1278.648, 1730.557, 31.60557, 1.684245, 0, 0, 0.7460582, 0.6658807, RESPAWN_IMMEDIATELY)
     // buffs
         || !AddObject(BG_RL_OBJECT_BUFF_1, BG_RL_OBJECT_TYPE_BUFF_1, 1328.719971, 1632.719971, 36.730400, -1.448624, 0, 0, 0.6626201, -0.7489557, 120)
@@ -173,4 +172,3 @@ Packet S->C, id 600, SMSG_INIT_WORLD_STATES (706), len 86
 0040: 00 00 00 00 00 00 D3 08 00 00 00 00 00 00 D4 08 | ................
 0050: 00 00 00 00 00 00                               | ......
 */
-

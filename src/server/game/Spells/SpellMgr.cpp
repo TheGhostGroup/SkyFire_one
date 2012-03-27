@@ -2667,7 +2667,7 @@ bool IsSpellAllowedInLocation(SpellEntry const *spellInfo, uint32 map_id, uint32
             if (!mapEntry)
                 return false;
 
-            if (!mapEntry->IsBattleGround())
+            if (!mapEntry->IsBattleground())
                 return false;
 
             if (zone_id == 3277)
@@ -2681,7 +2681,7 @@ bool IsSpellAllowedInLocation(SpellEntry const *spellInfo, uint32 map_id, uint32
             if (!mapEntry)
                 return false;
 
-            if (!mapEntry->IsBattleGround())
+            if (!mapEntry->IsBattleground())
                 return false;
 
             if (zone_id == 3820)
@@ -2745,7 +2745,7 @@ bool IsSpellAllowedInLocation(SpellEntry const *spellInfo, uint32 map_id, uint32
             if (!mapEntry)
                 return false;
 
-            if (!mapEntry->IsBattleGround())
+            if (!mapEntry->IsBattleground())
                 return false;
         }
     }

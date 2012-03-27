@@ -914,7 +914,7 @@ void World::LoadConfigSettings(bool reload)
     m_configs[CONFIG_BATTLEGROUND_QUEUE_ANNOUNCER_PLAYERONLY]   = ConfigMgr::GetBoolDefault("Battleground.QueueAnnouncer.PlayerOnly", false);
     m_configs[CONFIG_BATTLEGROUND_QUEUE_ANNOUNCER_ONSTART]      = ConfigMgr::GetBoolDefault("Battleground.QueueAnnouncer.OnStart", false);
     m_configs[CONFIG_BATTLEGROUND_PREMATURE_REWARD]             = ConfigMgr::GetBoolDefault("Battleground.PrematureReward", true);
-    m_configs[CONFIG_BATTLEGROUND_PREMATURE_FINISH_TIMER]       = ConfigMgr::GetIntDefault("BattleGround.PrematureFinishTimer", 5 * MINUTE * IN_MILLISECONDS);
+    m_configs[CONFIG_BATTLEGROUND_PREMATURE_FINISH_TIMER]       = ConfigMgr::GetIntDefault("Battleground.PrematureFinishTimer", 5 * MINUTE * IN_MILLISECONDS);
     m_configs[CONFIG_BATTLEGROUND_WRATH_LEAVE_MODE]             = ConfigMgr::GetBoolDefault("Battleground.LeaveWrathMode", false);
     m_configs[CONFIG_ARENA_MAX_RATING_DIFFERENCE]               = ConfigMgr::GetIntDefault("Arena.MaxRatingDifference", 0);
     m_configs[CONFIG_ARENA_RATING_DISCARD_TIMER]                = ConfigMgr::GetIntDefault("Arena.RatingDiscardTimer", 10 * MINUTE * IN_MILLISECONDS);
@@ -1086,7 +1086,7 @@ void World::LoadConfigSettings(bool reload)
     m_configs[CONFIG_CHATLOG_GUILD] = ConfigMgr::GetBoolDefault("ChatLogs.Guild", false);
     m_configs[CONFIG_CHATLOG_PUBLIC] = ConfigMgr::GetBoolDefault("ChatLogs.Public", false);
     m_configs[CONFIG_CHATLOG_ADDON] = ConfigMgr::GetBoolDefault("ChatLogs.Addon", false);
-    m_configs[CONFIG_CHATLOG_BGROUND] = ConfigMgr::GetBoolDefault("ChatLogs.BattleGround", false);
+    m_configs[CONFIG_CHATLOG_BGROUND] = ConfigMgr::GetBoolDefault("ChatLogs.Battleground", false);
 }
 
 // Initialize the World
@@ -1473,9 +1473,9 @@ void World::SetInitialWorldSettings()
     m_timers[WUPDATE_EVENTS].SetInterval(nextGameEvent);    //depend on next event
 
     // Initialize Battlegrounds
-    sLog->outString("Starting BattleGround System");
-    sBattleGroundMgr->CreateInitialBattleGrounds();
-    sBattleGroundMgr->InitAutomaticArenaPointDistribution();
+    sLog->outString("Starting Battleground System");
+    sBattlegroundMgr->CreateInitialBattlegrounds();
+    sBattlegroundMgr->InitAutomaticArenaPointDistribution();
 
     // Initialize outdoor pvp
     sLog->outString("Starting Outdoor PvP System");
@@ -1739,8 +1739,8 @@ void World::Update(time_t diff)
        }
     }
 
-    sBattleGroundMgr->Update(diff);
-    RecordTimeDiff("UpdateBattleGroundMgr");
+    sBattlegroundMgr->Update(diff);
+    RecordTimeDiff("UpdateBattlegroundMgr");
 
     sOutdoorPvPMgr->Update(diff);
     RecordTimeDiff("UpdateOutdoorPvPMgr");

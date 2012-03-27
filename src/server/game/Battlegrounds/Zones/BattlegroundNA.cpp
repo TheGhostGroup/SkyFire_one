@@ -1,12 +1,11 @@
 /*
- * Copyright (C) 2010-2012 Project SkyFire <http://www.projectskyfire.org/>
- * Copyright (C) 2010-2012 Oregon <http://www.oregoncore.com/>
+ * Copyright (C) 2011-2012 Project SkyFire <http://www.projectskyfire.org/>
  * Copyright (C) 2008-2012 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
+ * Free Software Foundation; either version 3 of the License, or (at your
  * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
@@ -18,16 +17,16 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Object.h"
-#include "Player.h"
-#include "Battleground.h"
-#include "BattleGroundNA.h"
-#include "Creature.h"
-#include "ObjectMgr.h"
-#include "MapManager.h"
-#include "Language.h"
 
-BattleGroundNA::BattleGroundNA()
+#include "Battleground.h"
+#include "BattlegroundNA.h"
+#include "Language.h"
+#include "Object.h"
+#include "ObjectMgr.h"
+#include "Player.h"
+#include "WorldPacket.h"
+
+BattlegroundNA::BattlegroundNA()
 {
     m_BgObjects.resize(BG_NA_OBJECT_MAX);
 
@@ -42,22 +41,27 @@ BattleGroundNA::BattleGroundNA()
     m_StartMessageIds[BG_STARTING_EVENT_FOURTH] = LANG_ARENA_HAS_BEGUN;
 }
 
-BattleGroundNA::~BattleGroundNA()
+BattlegroundNA::~BattlegroundNA()
 {
 }
 
-void BattleGroundNA::Update(time_t diff)
+void BattlegroundNA::Update(uint32 diff)
 {
-    BattleGround::Update(diff);
+    Battleground::Update(diff);
+
+    /*if (GetStatus() == STATUS_IN_PROGRESS)
+    {
+        // update something
+    }*/
 }
 
-void BattleGroundNA::StartingEventCloseDoors()
+void BattlegroundNA::StartingEventCloseDoors()
 {
     for (uint32 i = BG_NA_OBJECT_DOOR_1; i <= BG_NA_OBJECT_DOOR_4; ++i)
         SpawnBGObject(i, RESPAWN_IMMEDIATELY);
 }
 
-void BattleGroundNA::StartingEventOpenDoors()
+void BattlegroundNA::StartingEventOpenDoors()
 {
     for (uint32 i = BG_NA_OBJECT_DOOR_1; i <= BG_NA_OBJECT_DOOR_2; ++i)
         DoorOpen(i);
@@ -66,62 +70,57 @@ void BattleGroundNA::StartingEventOpenDoors()
         SpawnBGObject(i, 60);
 }
 
-void BattleGroundNA::AddPlayer(Player *plr)
+void BattlegroundNA::AddPlayer(Player *plr)
 {
-    BattleGround::AddPlayer(plr);
+    Battleground::AddPlayer(plr);
     //create score and add it to map, default values are set in constructor
-    BattleGroundNAScore* sc = new BattleGroundNAScore;
+    BattlegroundNAScore* sc = new BattlegroundNAScore;
 
     m_PlayerScores[plr->GetGUID()] = sc;
 
-    UpdateWorldState(0xa0f, GetAlivePlayersCountByTeam(ALLIANCE));
-    UpdateWorldState(0xa10, GetAlivePlayersCountByTeam(HORDE));
+    UpdateArenaWorldState();
 }
 
-void BattleGroundNA::RemovePlayer(Player* /*plr*/, uint64 /*guid*/)
+void BattlegroundNA::RemovePlayer(Player* /*plr*/, uint64 /*guid*/)
 {
     if (GetStatus() == STATUS_WAIT_LEAVE)
         return;
 
-    UpdateWorldState(0xa0f, GetAlivePlayersCountByTeam(ALLIANCE));
-    UpdateWorldState(0xa10, GetAlivePlayersCountByTeam(HORDE));
-
+    UpdateArenaWorldState();
     CheckArenaWinConditions();
 }
 
-void BattleGroundNA::HandleKillPlayer(Player* player, Player* killer)
+void BattlegroundNA::HandleKillPlayer(Player *player, Player *killer)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;
 
     if (!killer)
     {
-        sLog->outError("BattleGroundNA: Killer player not found");
+        sLog->outError("BattlegroundNA: Killer player not found");
         return;
     }
 
-    BattleGround::HandleKillPlayer(player, killer);
+    Battleground::HandleKillPlayer(player,killer);
 
-    UpdateWorldState(0xa0f, GetAlivePlayersCountByTeam(ALLIANCE));
-    UpdateWorldState(0xa10, GetAlivePlayersCountByTeam(HORDE));
-
+    UpdateArenaWorldState();
     CheckArenaWinConditions();
 }
 
-bool BattleGroundNA::HandlePlayerUnderMap(Player* player)
+bool BattlegroundNA::HandlePlayerUnderMap(Player *player)
 {
-    player->TeleportTo(GetMapId(), 4055.504395, 2919.660645, 13.611241, player->GetOrientation(), false);
+    player->TeleportTo(GetMapId(),4055.504395,2919.660645,13.611241,player->GetOrientation(),false);
     return true;
 }
 
-void BattleGroundNA::HandleAreaTrigger(Player *Source, uint32 Trigger)
+void BattlegroundNA::HandleAreaTrigger(Player *Source, uint32 Trigger)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;
 
     //uint32 SpellId = 0;
     //uint64 buff_guid = 0;
-    switch (Trigger)
+    switch(Trigger)
     {
         case 4536:                                          // buff trigger?
         case 4537:                                          // buff trigger?
@@ -133,24 +132,25 @@ void BattleGroundNA::HandleAreaTrigger(Player *Source, uint32 Trigger)
     }
 
     //if (buff_guid)
-    //    HandleTriggerBuff(buff_guid, Source);
+    //    HandleTriggerBuff(buff_guid,Source);
 }
 
-void BattleGroundNA::FillInitialWorldStates(WorldPacket &data)
+void BattlegroundNA::FillInitialWorldStates(WorldPacket &data)
 {
-    data << uint32(0xa0f) << uint32(GetAlivePlayersCountByTeam(ALLIANCE));           // 7
-    data << uint32(0xa10) << uint32(GetAlivePlayersCountByTeam(HORDE));           // 8
     data << uint32(0xa11) << uint32(1);           // 9
+    UpdateArenaWorldState();
 }
 
-void BattleGroundNA::ResetBGSubclass()
+void BattlegroundNA::Reset()
 {
+    //call parent's class reset
+    Battleground::Reset();
 }
 
-bool BattleGroundNA::SetupBattleGround()
+bool BattlegroundNA::SetupBattleground()
 {
     // gates
-    if (  !AddObject(BG_NA_OBJECT_DOOR_1, BG_NA_OBJECT_TYPE_DOOR_1, 4031.854, 2966.833, 12.6462, -2.648788, 0, 0, 0.9697962, -0.2439165, RESPAWN_IMMEDIATELY)
+    if (!AddObject(BG_NA_OBJECT_DOOR_1, BG_NA_OBJECT_TYPE_DOOR_1, 4031.854, 2966.833, 12.6462, -2.648788, 0, 0, 0.9697962, -0.2439165, RESPAWN_IMMEDIATELY)
         || !AddObject(BG_NA_OBJECT_DOOR_2, BG_NA_OBJECT_TYPE_DOOR_2, 4081.179, 2874.97, 12.39171, 0.4928045, 0, 0, 0.2439165, 0.9697962, RESPAWN_IMMEDIATELY)
         || !AddObject(BG_NA_OBJECT_DOOR_3, BG_NA_OBJECT_TYPE_DOOR_3, 4023.709, 2981.777, 10.70117, -2.648788, 0, 0, 0.9697962, -0.2439165, RESPAWN_IMMEDIATELY)
         || !AddObject(BG_NA_OBJECT_DOOR_4, BG_NA_OBJECT_TYPE_DOOR_4, 4090.064, 2858.438, 10.23631, 0.4928045, 0, 0, 0.2439165, 0.9697962, RESPAWN_IMMEDIATELY)
@@ -174,4 +174,3 @@ bool BattleGroundNA::SetupBattleGround()
 0040: 00 00 00 00 00 00 d5 08 00 00 00 00 00 00 d3 08  |  ................
 0050: 00 00 00 00 00 00                                |  ......
 */
-

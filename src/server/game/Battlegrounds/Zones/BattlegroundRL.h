@@ -1,12 +1,11 @@
 /*
- * Copyright (C) 2010-2012 Project SkyFire <http://www.projectskyfire.org/>
- * Copyright (C) 2010-2012 Oregon <http://www.oregoncore.com/>
+ * Copyright (C) 2011-2012 Project SkyFire <http://www.projectskyfire.org/>
  * Copyright (C) 2008-2012 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
+ * Free Software Foundation; either version 3 of the License, or (at your
  * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
@@ -21,9 +20,9 @@
 #ifndef __BATTLEGROUNDRL_H
 #define __BATTLEGROUNDRL_H
 
-class BattleGround;
+class Battleground;
 
-enum BattleGroundRLObjectTypes
+enum BattlegroundRLObjectTypes
 {
     BG_RL_OBJECT_DOOR_1         = 0,
     BG_RL_OBJECT_DOOR_2         = 1,
@@ -32,7 +31,7 @@ enum BattleGroundRLObjectTypes
     BG_RL_OBJECT_MAX            = 4
 };
 
-enum BattleGroundRLObjects
+enum BattlegroundRLObjects
 {
     BG_RL_OBJECT_TYPE_DOOR_1    = 185918,
     BG_RL_OBJECT_TYPE_DOOR_2    = 185917,
@@ -40,35 +39,34 @@ enum BattleGroundRLObjects
     BG_RL_OBJECT_TYPE_BUFF_2    = 184664
 };
 
-class BattleGroundRLScore : public BattleGroundScore
+class BattlegroundRLScore : public BattlegroundScore
 {
     public:
-        BattleGroundRLScore() {};
-        virtual ~BattleGroundRLScore() {};
+        BattlegroundRLScore() {};
+        virtual ~BattlegroundRLScore() {};
         //TODO fix me
 };
 
-class BattleGroundRL : public BattleGround
+class BattlegroundRL : public Battleground
 {
-    friend class BattleGroundMgr;
+    friend class BattlegroundMgr;
 
     public:
-        BattleGroundRL();
-        ~BattleGroundRL();
-        void Update(time_t diff);
+        BattlegroundRL();
+        ~BattlegroundRL();
+        void Update(uint32 diff);
 
         /* inherited from BattlegroundClass */
         virtual void AddPlayer(Player *plr);
+        virtual void Reset();
+        virtual void FillInitialWorldStates(WorldPacket &d);
         virtual void StartingEventCloseDoors();
         virtual void StartingEventOpenDoors();
 
         void RemovePlayer(Player *plr, uint64 guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
-        bool SetupBattleGround();
-        virtual void ResetBGSubclass();
-        virtual void FillInitialWorldStates(WorldPacket &d);
-        void HandleKillPlayer(Player* player, Player* killer);
+        bool SetupBattleground();
+        void HandleKillPlayer(Player* player, Player *killer);
         bool HandlePlayerUnderMap(Player * plr);
 };
 #endif
-

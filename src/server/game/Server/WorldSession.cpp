@@ -323,7 +323,7 @@ void WorldSession::LogoutPlayer(bool Save)
             // give bg rewards and update counters like kill by first from attackers
             // this can't be called for all attackers.
             if (!aset.empty())
-                if (BattleGround *bg = _player->GetBattleGround())
+                if (Battleground *bg = _player->GetBattleground())
                     bg->HandleKillPlayer(_player, *aset.begin());
         }
         else if (_player->HasAuraType(SPELL_AURA_SPIRIT_OF_REDEMPTION))
@@ -336,7 +336,7 @@ void WorldSession::LogoutPlayer(bool Save)
             _player->RepopAtGraveyard();
         }
         //drop a flag if player is carrying it
-        if (BattleGround *bg = _player->GetBattleGround())
+        if (Battleground *bg = _player->GetBattleground())
             bg->EventPlayerLoggedOut(_player);
 
         // Teleport to home if the player is in an invalid instance
@@ -356,10 +356,10 @@ void WorldSession::LogoutPlayer(bool Save)
 
         for (int i = 0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; ++i)
         {
-            if (int32 bgTypeId = _player->GetBattleGroundQueueId(i))
+            if (int32 bgTypeId = _player->GetBattlegroundQueueId(i))
             {
-                _player->RemoveBattleGroundQueueId(bgTypeId);
-                sBattleGroundMgr->m_BattleGroundQueues[ bgTypeId ].RemovePlayer(_player->GetGUID(), true);
+                _player->RemoveBattlegroundQueueId(bgTypeId);
+                sBattlegroundMgr->m_BattlegroundQueues[ bgTypeId ].RemovePlayer(_player->GetGUID(), true);
             }
         }
 

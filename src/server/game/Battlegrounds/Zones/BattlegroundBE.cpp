@@ -1,12 +1,11 @@
 /*
- * Copyright (C) 2010-2012 Project SkyFire <http://www.projectskyfire.org/>
- * Copyright (C) 2010-2012 Oregon <http://www.oregoncore.com/>
+ * Copyright (C) 2011-2012 Project SkyFire <http://www.projectskyfire.org/>
  * Copyright (C) 2008-2012 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
+ * Free Software Foundation; either version 3 of the License, or (at your
  * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
@@ -18,16 +17,15 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Object.h"
-#include "Player.h"
 #include "Battleground.h"
-#include "BattleGroundBE.h"
-#include "Creature.h"
-#include "ObjectMgr.h"
-#include "MapManager.h"
+#include "BattlegroundBE.h"
 #include "Language.h"
+#include "Object.h"
+#include "ObjectMgr.h"
+#include "Player.h"
+#include "WorldPacket.h"
 
-BattleGroundBE::BattleGroundBE()
+BattlegroundBE::BattlegroundBE()
 {
     m_BgObjects.resize(BG_BE_OBJECT_MAX);
 
@@ -42,16 +40,21 @@ BattleGroundBE::BattleGroundBE()
     m_StartMessageIds[BG_STARTING_EVENT_FOURTH] = LANG_ARENA_HAS_BEGUN;
 }
 
-BattleGroundBE::~BattleGroundBE()
+BattlegroundBE::~BattlegroundBE()
 {
 }
 
-void BattleGroundBE::Update(time_t diff)
+void BattlegroundBE::Update(uint32 diff)
 {
-    BattleGround::Update(diff);
+    Battleground::Update(diff);
+
+    /*if (GetStatus() == STATUS_IN_PROGRESS)
+    {
+        // update something
+    }*/
 }
 
-void BattleGroundBE::StartingEventCloseDoors()
+void BattlegroundBE::StartingEventCloseDoors()
 {
     for (uint32 i = BG_BE_OBJECT_DOOR_1; i <= BG_BE_OBJECT_DOOR_4; ++i)
         SpawnBGObject(i, RESPAWN_IMMEDIATELY);
@@ -60,7 +63,7 @@ void BattleGroundBE::StartingEventCloseDoors()
         SpawnBGObject(i, RESPAWN_ONE_DAY);
 }
 
-void BattleGroundBE::StartingEventOpenDoors()
+void BattlegroundBE::StartingEventOpenDoors()
 {
     for (uint32 i = BG_BE_OBJECT_DOOR_1; i <= BG_BE_OBJECT_DOOR_2; ++i)
         DoorOpen(i);
@@ -69,30 +72,27 @@ void BattleGroundBE::StartingEventOpenDoors()
         SpawnBGObject(i, 60);
 }
 
-void BattleGroundBE::AddPlayer(Player *plr)
+void BattlegroundBE::AddPlayer(Player *plr)
 {
-    BattleGround::AddPlayer(plr);
+    Battleground::AddPlayer(plr);
     //create score and add it to map, default values are set in constructor
-    BattleGroundBEScore* sc = new BattleGroundBEScore;
+    BattlegroundBEScore* sc = new BattlegroundBEScore;
 
     m_PlayerScores[plr->GetGUID()] = sc;
 
-    UpdateWorldState(0x9f1, GetAlivePlayersCountByTeam(ALLIANCE));
-    UpdateWorldState(0x9f0, GetAlivePlayersCountByTeam(HORDE));
+    UpdateArenaWorldState();
 }
 
-void BattleGroundBE::RemovePlayer(Player* /*plr*/, uint64 /*guid*/)
+void BattlegroundBE::RemovePlayer(Player* /*plr*/, uint64 /*guid*/)
 {
     if (GetStatus() == STATUS_WAIT_LEAVE)
         return;
 
-    UpdateWorldState(0x9f1, GetAlivePlayersCountByTeam(ALLIANCE));
-    UpdateWorldState(0x9f0, GetAlivePlayersCountByTeam(HORDE));
-
+    UpdateArenaWorldState();
     CheckArenaWinConditions();
 }
 
-void BattleGroundBE::HandleKillPlayer(Player* player, Player* killer)
+void BattlegroundBE::HandleKillPlayer(Player *player, Player *killer)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;
@@ -103,21 +103,19 @@ void BattleGroundBE::HandleKillPlayer(Player* player, Player* killer)
         return;
     }
 
-    BattleGround::HandleKillPlayer(player, killer);
+    Battleground::HandleKillPlayer(player,killer);
 
-    UpdateWorldState(0x9f1, GetAlivePlayersCountByTeam(ALLIANCE));
-    UpdateWorldState(0x9f0, GetAlivePlayersCountByTeam(HORDE));
-
+    UpdateArenaWorldState();
     CheckArenaWinConditions();
 }
 
-bool BattleGroundBE::HandlePlayerUnderMap(Player* player)
+bool BattlegroundBE::HandlePlayerUnderMap(Player *player)
 {
-    player->TeleportTo(GetMapId(), 6238.930176, 262.963470, 0.889519, player->GetOrientation(), false);
+    player->TeleportTo(GetMapId(),6238.930176,262.963470,0.889519,player->GetOrientation(),false);
     return true;
 }
 
-void BattleGroundBE::HandleAreaTrigger(Player *Source, uint32 Trigger)
+void BattlegroundBE::HandleAreaTrigger(Player *Source, uint32 Trigger)
 {
     // this is wrong way to implement these things. On official it done by gameobject spell cast.
     if (GetStatus() != STATUS_IN_PROGRESS)
@@ -125,7 +123,7 @@ void BattleGroundBE::HandleAreaTrigger(Player *Source, uint32 Trigger)
 
     //uint32 SpellId = 0;
     //uint64 buff_guid = 0;
-    switch (Trigger)
+    switch(Trigger)
     {
         case 4538:                                          // buff trigger?
             //buff_guid = m_BgObjects[BG_BE_OBJECT_BUFF_1];
@@ -140,24 +138,25 @@ void BattleGroundBE::HandleAreaTrigger(Player *Source, uint32 Trigger)
     }
 
     //if (buff_guid)
-    //    HandleTriggerBuff(buff_guid, Source);
+    //    HandleTriggerBuff(buff_guid,Source);
 }
 
-void BattleGroundBE::FillInitialWorldStates(WorldPacket &data)
+void BattlegroundBE::FillInitialWorldStates(WorldPacket &data)
 {
-    data << uint32(0x9f1) << uint32(GetAlivePlayersCountByTeam(ALLIANCE));           // 7
-    data << uint32(0x9f0) << uint32(GetAlivePlayersCountByTeam(HORDE));           // 8
     data << uint32(0x9f3) << uint32(1);           // 9
+    UpdateArenaWorldState();
 }
 
-void BattleGroundBE::ResetBGSubclass()
+void BattlegroundBE::Reset()
 {
+    //call parent's class reset
+    Battleground::Reset();
 }
 
-bool BattleGroundBE::SetupBattleGround()
+bool BattlegroundBE::SetupBattleground()
 {
     // gates
-    if (  !AddObject(BG_BE_OBJECT_DOOR_1, BG_BE_OBJECT_TYPE_DOOR_1, 6287.277f, 282.1877f, 3.810925f, -2.260201f, 0, 0, 0.9044551f, -0.4265689f, RESPAWN_IMMEDIATELY)
+    if (!AddObject(BG_BE_OBJECT_DOOR_1, BG_BE_OBJECT_TYPE_DOOR_1, 6287.277f, 282.1877f, 3.810925f, -2.260201f, 0, 0, 0.9044551f, -0.4265689f, RESPAWN_IMMEDIATELY)
         || !AddObject(BG_BE_OBJECT_DOOR_2, BG_BE_OBJECT_TYPE_DOOR_2, 6189.546f, 241.7099f, 3.101481f, 0.8813917f, 0, 0, 0.4265689f, 0.9044551f, RESPAWN_IMMEDIATELY)
         || !AddObject(BG_BE_OBJECT_DOOR_3, BG_BE_OBJECT_TYPE_DOOR_3, 6299.116f, 296.5494f, 3.308032f, 0.8813917f, 0, 0, 0.4265689f, 0.9044551f, RESPAWN_IMMEDIATELY)
         || !AddObject(BG_BE_OBJECT_DOOR_4, BG_BE_OBJECT_TYPE_DOOR_4, 6177.708f, 227.3481f, 3.604374f, -2.260201f, 0, 0, 0.9044551f, -0.4265689f, RESPAWN_IMMEDIATELY)
@@ -172,14 +171,14 @@ bool BattleGroundBE::SetupBattleGround()
     return true;
 }
 
-void BattleGroundBE::UpdatePlayerScore(Player* Source, uint32 type, uint32 value)
+void BattlegroundBE::UpdatePlayerScore(Player* Source, uint32 type, uint32 value, bool doAddHonor)
 {
-    BattleGroundScoreMap::iterator itr = m_PlayerScores.find(Source->GetGUID());
+    BattlegroundScoreMap::iterator itr = m_PlayerScores.find(Source->GetGUID());
     if (itr == m_PlayerScores.end())                         // player not found...
         return;
 
     //there is nothing special in this score
-    BattleGround::UpdatePlayerScore(Source, type, value);
+    Battleground::UpdatePlayerScore(Source,type,value, doAddHonor);
 }
 
 /*
@@ -196,4 +195,3 @@ spell 32725 - Green Team
 35774 Gold Team
 35775 Green Team
 */
-

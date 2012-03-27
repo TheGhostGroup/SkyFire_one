@@ -1,12 +1,11 @@
 /*
- * Copyright (C) 2010-2012 Project SkyFire <http://www.projectskyfire.org/>
- * Copyright (C) 2010-2012 Oregon <http://www.oregoncore.com/>
+ * Copyright (C) 2011-2012 Project SkyFire <http://www.projectskyfire.org/>
  * Copyright (C) 2008-2012 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
+ * Free Software Foundation; either version 3 of the License, or (at your
  * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
@@ -18,8 +17,12 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TRINITY_ARENATEAM_H
-#define TRINITY_ARENATEAM_H
+#ifndef TRINITYCORE_ARENATEAM_H
+#define TRINITYCORE_ARENATEAM_H
+
+#include "QueryResult.h"
+
+class WorldSession;
 
 enum ArenaTeamCommandTypes
 {
@@ -46,7 +49,10 @@ enum ArenaTeamCommandErrors
     ERR_ARENA_TEAM_NOT_ALLIED               = 0x0C,
     ERR_ARENA_TEAM_IGNORING_YOU_S           = 0x13,
     ERR_ARENA_TEAM_TARGET_TOO_LOW_S         = 0x15,
-    ERR_ARENA_TEAM_TOO_MANY_MEMBERS_S       = 0x16,
+    ERR_ARENA_TEAM_TARGET_TOO_HIGH_S        = 0x16,
+    ERR_ARENA_TEAM_TOO_MANY_MEMBERS_S       = 0x17,
+    ERR_ARENA_TEAM_NOT_FOUND                = 0x1B,
+    ERR_ARENA_TEAMS_LOCKED                  = 0x1E
 };
 
 enum ArenaTeamEvents
@@ -84,9 +90,6 @@ enum ArenaTeamTypes
     ARENA_TEAM_5v5      = 5
 };
 
-#define ARENA_NEW_TEAM_RATING       1500
-#define ARENA_NEW_PERSONAL_RATING   1500
-
 struct ArenaTeamMember
 {
     uint64 guid;
@@ -119,7 +122,7 @@ class ArenaTeam
         ArenaTeam();
         ~ArenaTeam();
 
-        bool Create(uint64 captainGuid, uint32 type, std::string arenaTeamName);
+        bool Create(uint64 captainGuid, uint32 type, std::string ArenaTeamName);
         void Disband(WorldSession *session);
 
         typedef std::list<ArenaTeamMember> MemberList;
@@ -141,7 +144,10 @@ class ArenaTeam
         uint32 GetBackgroundColor() const { return m_BackgroundColor; }
 
         void SetCaptain(const uint64& guid);
-        bool AddMember(const uint64& playerGuid);
+        bool AddMember(const uint64& PlayerGuid);
+
+        // Shouldn't be const uint64& ed, because than can reference guid from members on Disband
+        // and this method removes given record from list. So invalid reference can happen.
         void DelMember(uint64 guid);
 
         void SetEmblem(uint32 backgroundColor, uint32 emblemStyle, uint32 emblemColor, uint32 borderStyle, uint32 borderColor);
@@ -179,12 +185,7 @@ class ArenaTeam
         void SaveToDB();
 
         void BroadcastPacket(WorldPacket *packet);
-
-        void BroadcastEvent(ArenaTeamEvents event, uint64 guid, char const* str1 = NULL, char const* str2 = NULL, char const* str3 = NULL);
-        void BroadcastEvent(ArenaTeamEvents event, char const* str1 = NULL, char const* str2 = NULL, char const* str3 = NULL)
-        {
-            BroadcastEvent(event, 0, str1, str2, str3);
-        }
+        void BroadcastEvent(ArenaTeamEvents event, uint64 guid, uint8 strCount, std::string str1, std::string str2, std::string str3);
 
         void Roster(WorldSession *session);
         void Query(WorldSession *session);

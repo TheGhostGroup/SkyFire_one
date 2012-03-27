@@ -1,12 +1,11 @@
 /*
- * Copyright (C) 2010-2012 Project SkyFire <http://www.projectskyfire.org/>
- * Copyright (C) 2010-2012 Oregon <http://www.oregoncore.com/>
+ * Copyright (C) 2011-2012 Project SkyFire <http://www.projectskyfire.org/>
  * Copyright (C) 2008-2012 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
+ * Free Software Foundation; either version 3 of the License, or (at your
  * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
@@ -17,6 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #ifndef __BATTLEGROUNDWS_H
 #define __BATTLEGROUNDWS_H
@@ -47,8 +47,10 @@ enum BG_WS_SpellId
 {
     BG_WS_SPELL_WARSONG_FLAG            = 23333,
     BG_WS_SPELL_WARSONG_FLAG_DROPPED    = 23334,
+    BG_WS_SPELL_WARSONG_FLAG_PICKED     = 61266,    // fake spell, does not exist but used as timer start event
     BG_WS_SPELL_SILVERWING_FLAG         = 23335,
     BG_WS_SPELL_SILVERWING_FLAG_DROPPED = 23336,
+    BG_WS_SPELL_SILVERWING_FLAG_PICKED  = 61265,    // fake spell, does not exist but used as timer start event
     BG_WS_SPELL_FOCUSED_ASSAULT         = 46392,
     BG_WS_SPELL_BRUTAL_ASSAULT          = 46393
 };
@@ -62,7 +64,9 @@ enum BG_WS_WorldStates
     BG_WS_FLAG_CAPTURES_HORDE     = 1582,
     BG_WS_FLAG_CAPTURES_MAX       = 1601,
     BG_WS_FLAG_STATE_HORDE        = 2338,
-    BG_WS_FLAG_STATE_ALLIANCE     = 2339
+    BG_WS_FLAG_STATE_ALLIANCE     = 2339,
+    BG_WS_STATE_TIMER             = 4248,
+    BG_WS_STATE_TIMER_ACTIVE      = 4247
 };
 
 enum BG_WS_ObjectTypes
@@ -136,24 +140,32 @@ enum BG_WS_CarrierDebuffs
     WS_SPELL_BRUTAL_ASSAULT    = 46393
 };
 
-class BattleGroundWGScore : public BattleGroundScore
+enum BG_WS_Objectives
+{
+    WS_OBJECTIVE_CAPTURE_FLAG   = 42,
+    WS_OBJECTIVE_RETURN_FLAG    = 44
+};
+
+#define WS_EVENT_START_BATTLE   8563
+
+class BattlegroundWGScore : public BattlegroundScore
 {
     public:
-        BattleGroundWGScore() : FlagCaptures(0), FlagReturns(0) {};
-        virtual ~BattleGroundWGScore() {};
+        BattlegroundWGScore() : FlagCaptures(0), FlagReturns(0) {};
+        virtual ~BattlegroundWGScore() {};
         uint32 FlagCaptures;
         uint32 FlagReturns;
 };
 
-class BattleGroundWS : public BattleGround
+class BattlegroundWS : public Battleground
 {
-    friend class BattleGroundMgr;
+    friend class BattlegroundMgr;
 
     public:
         /* Construction */
-        BattleGroundWS();
-        ~BattleGroundWS();
-        void Update(time_t diff);
+        BattlegroundWS();
+        ~BattlegroundWS();
+        void Update(uint32 diff);
 
         /* inherited from BattlegroundClass */
         virtual void AddPlayer(Player *plr);
@@ -182,35 +194,40 @@ class BattleGroundWS : public BattleGround
 
         void RemovePlayer(Player *plr, uint64 guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
-        void HandleKillPlayer(Player* player, Player* killer);
-        bool SetupBattleGround();
-        virtual void ResetBGSubclass();
+        void HandleKillPlayer(Player *player, Player *killer);
+        bool SetupBattleground();
+        virtual void Reset();
+        void EndBattleground(uint32 winner);
         virtual WorldSafeLocsEntry const* GetClosestGraveYard(Player* player);
 
         void UpdateFlagState(uint32 team, uint32 value);
+        void SetLastFlagCapture(uint32 team)                { m_LastFlagCaptureTeam = team; }
         void UpdateTeamScore(uint32 team);
-        void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);
+        void UpdatePlayerScore(Player *Source, uint32 type, uint32 value, bool doAddHonor = true);
         void SetDroppedFlagGUID(uint64 guid, uint32 TeamID)  { m_DroppedFlagGUID[GetTeamIndexByTeamId(TeamID)] = guid;}
         uint64 GetDroppedFlagGUID(uint32 TeamID)             { return m_DroppedFlagGUID[GetTeamIndexByTeamId(TeamID)];}
         virtual void FillInitialWorldStates(WorldPacket& data);
 
         /* Scorekeeping */
         uint32 GetTeamScore(uint32 TeamID) const            { return m_TeamScores[GetTeamIndexByTeamId(TeamID)]; }
-        void AddPoint(uint32 TeamID, uint32 Points = 1)     { m_TeamScores[GetTeamIndexByTeamId(TeamID)] += Points; m_score[GetTeamIndexByTeamId(TeamID)] =  m_TeamScores[GetTeamIndexByTeamId(TeamID)];}
-        void SetTeamPoint(uint32 TeamID, uint32 Points = 0) { m_TeamScores[GetTeamIndexByTeamId(TeamID)] = Points; m_score[GetTeamIndexByTeamId(TeamID)] =  m_TeamScores[GetTeamIndexByTeamId(TeamID)];}
-        void RemovePoint(uint32 TeamID, uint32 Points = 1)  { m_TeamScores[GetTeamIndexByTeamId(TeamID)] -= Points; m_score[GetTeamIndexByTeamId(TeamID)] =  m_TeamScores[GetTeamIndexByTeamId(TeamID)]; }
-
+        void AddPoint(uint32 TeamID, uint32 Points = 1)     { m_TeamScores[GetTeamIndexByTeamId(TeamID)] += Points; }
+        void SetTeamPoint(uint32 TeamID, uint32 Points = 0) { m_TeamScores[GetTeamIndexByTeamId(TeamID)] = Points; }
+        void RemovePoint(uint32 TeamID, uint32 Points = 1)  { m_TeamScores[GetTeamIndexByTeamId(TeamID)] -= Points; }
     private:
         uint64 m_FlagKeepers[2];                            // 0 - alliance, 1 - horde
         uint64 m_DroppedFlagGUID[2];
         uint8 m_FlagState[2];                               // for checking flag state
         int32 m_FlagsTimer[2];
         int32 m_FlagsDropTimer[2];
+        uint32 m_LastFlagCaptureTeam;                       // Winner is based on this if score is equal
 
+        uint32 m_ReputationCapture;
+        uint32 m_HonorWinKills;
+        uint32 m_HonorEndKills;
         int32 m_FlagSpellForceTimer;
-        int32 m_FlagSpellBrutalTimer;
         bool m_BothFlagsKept;
         uint8 m_FlagDebuffState;                            // 0 - no debuffs, 1 - focused assault, 2 - brutal assault
+        uint8 m_minutesElapsed;
 };
 #endif
 
