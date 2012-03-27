@@ -34,6 +34,7 @@ typedef std::map<uint32, Battleground*> BattlegroundSet;
 
 #define MAX_BATTLEGROUND_TYPES 9                            // each BG type will be in array
 #define BATTLEGROUND_ARENA_POINT_DISTRIBUTION_DAY    86400     // seconds in a day
+#define MAX_BATTLEGROUND_QUEUE_TYPES 8
 
 class BattlegroundMgr
 {
@@ -90,6 +91,7 @@ class BattlegroundMgr
         /* Battleground queues */
         //these queues are instantiated when creating BattlegroundMrg
         BattlegroundQueue m_BattlegroundQueues[MAX_BATTLEGROUND_QUEUE_TYPES]; // public, because we need to access them in BG handler code
+
         BGFreeSlotQueueType BGFreeSlotQueue[MAX_BATTLEGROUND_TYPES];
 
         void SendAreaSpiritHealerQueryOpcode(Player *pl, Battleground *bg, uint64 guid);

@@ -26,9 +26,8 @@
 #include "EventProcessor.h"
 
 #define MAX_BATTLEGROUND_QUEUES 7        // for level ranges 10-19, 20-29, 30-39, 40-49, 50-59, 60-69, 70+
-#define MAX_BATTLEGROUND_QUEUE_TYPES 8
 
-//typedef std::map<uint32, BattlegroundQueue*> BattlegroundQueueSet;
+//this container can't be deque, because deque doesn't like removing the last element - if you remove it, it invalidates next iterator and crash appears
 typedef std::list<Battleground*> BGFreeSlotQueueType;
 
 struct GroupQueueInfo;                                      // type predefinition
