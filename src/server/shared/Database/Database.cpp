@@ -73,7 +73,7 @@ bool Database::Initialize(const char* infoString)
     m_logsDir = ConfigMgr::GetStringDefault("LogsDir","");
     if (!m_logsDir.empty())
     {
-        if ((m_logsDir.at(m_logsDir.length() -1) !='/') && (m_logsDir.at(m_logsDir.length() -1) !='\\'))
+        if ((m_logsDir.at(m_logsDir.length() -1) != '/') && (m_logsDir.at(m_logsDir.length() -1) != '\\'))
             m_logsDir.append("/");
     }
 

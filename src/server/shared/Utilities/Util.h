@@ -415,9 +415,9 @@ public:
     template<class type>
     inline bool operator != (type & right)
     {
-        if (part[0]!=right.part[0]
-            || part[1]!=right.part[1]
-            || part[2]!=right.part[2])
+        if (part[0]!= right.part[0]
+            || part[1]!= right.part[1]
+            || part[2]!= right.part[2])
                 return true;
         return false;
     }
@@ -425,9 +425,9 @@ public:
     template<class type>
     inline bool operator != (type & right) const
     {
-        if (part[0]!=right.part[0]
-            || part[1]!=right.part[1]
-            || part[2]!=right.part[2])
+        if (part[0]!= right.part[0]
+            || part[1]!= right.part[1]
+            || part[2]!= right.part[2])
                 return true;
         return false;
     };
@@ -435,9 +435,9 @@ public:
     template<class type>
     inline bool operator == (type & right)
     {
-        if (part[0]!=right.part[0]
-            || part[1]!=right.part[1]
-            || part[2]!=right.part[2])
+        if (part[0]!= right.part[0]
+            || part[1]!= right.part[1]
+            || part[2]!= right.part[2])
                 return false;
         return true;
     };
@@ -445,9 +445,9 @@ public:
     template<class type>
     inline bool operator == (type & right) const
     {
-        if (part[0]!=right.part[0]
-            || part[1]!=right.part[1]
-            || part[2]!=right.part[2])
+        if (part[0]!= right.part[0]
+            || part[1]!= right.part[1]
+            || part[2]!= right.part[2])
                 return false;
         return true;
     };

@@ -42,29 +42,29 @@ bool DBCFileLoader::Load(const char *filename, const char *fmt)
     FILE * f=fopen(filename,"rb");
     if (!f)return false;
 
-    if (fread(&header, 4, 1, f)!=1)                             // Number of records
+    if (fread(&header, 4, 1, f)!= 1)                             // Number of records
         return false;
 
     EndianConvert(header);
-    if (header!=0x43424457)
+    if (header!= 0x43424457)
         return false;                                       //'WDBC'
 
-    if (fread(&recordCount, 4, 1, f)!=1)                        // Number of records
+    if (fread(&recordCount, 4, 1, f)!= 1)                        // Number of records
         return false;
 
     EndianConvert(recordCount);
 
-    if (fread(&fieldCount, 4, 1, f)!=1)                         // Number of fields
+    if (fread(&fieldCount, 4, 1, f)!= 1)                         // Number of fields
         return false;
 
     EndianConvert(fieldCount);
 
-    if (fread(&recordSize, 4, 1, f)!=1)                         // Size of a record
+    if (fread(&recordSize, 4, 1, f)!= 1)                         // Size of a record
         return false;
 
     EndianConvert(recordSize);
 
-    if (fread(&stringSize, 4, 1, f)!=1)                         // String size
+    if (fread(&stringSize, 4, 1, f)!= 1)                         // String size
         return false;
 
     EndianConvert(stringSize);
@@ -83,7 +83,7 @@ bool DBCFileLoader::Load(const char *filename, const char *fmt)
     data = new unsigned char[recordSize*recordCount+stringSize];
     stringTable = data + recordSize*recordCount;
 
-    if (fread(data, recordSize*recordCount+stringSize, 1, f)!=1)
+    if (fread(data, recordSize*recordCount+stringSize, 1, f)!= 1)
         return false;
 
     fclose(f);
@@ -150,7 +150,7 @@ char* DBCFileLoader::AutoProduceData(const char* format, uint32& records, char**
     */
 
     typedef char * ptr;
-    if (strlen(format)!=fieldCount)
+    if (strlen(format)!= fieldCount)
         return NULL;
 
     // get struct size and index pos
@@ -221,7 +221,7 @@ char* DBCFileLoader::AutoProduceData(const char* format, uint32& records, char**
 
 char* DBCFileLoader::AutoProduceStrings(const char* format, char* dataTable)
 {
-    if (strlen(format)!=fieldCount)
+    if (strlen(format)!= fieldCount)
         return NULL;
 
     char* stringPool= new char[stringSize];

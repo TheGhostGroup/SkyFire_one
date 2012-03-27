@@ -859,7 +859,7 @@ uint32 Battleground::GetBonusHonorFromKill(uint32 kills) const
 
 uint32 Battleground::GetBattlemasterEntry() const
 {
-    switch(GetTypeID(true))
+    switch (GetTypeID(true))
     {
         case BATTLEGROUND_AV: return 15972;
         case BATTLEGROUND_WS: return 14623;
@@ -900,7 +900,7 @@ void Battleground::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
 
     Player *plr = sObjectMgr->GetPlayer(guid);
 
-  if(plr && sBattlegroundMgr->isMixBg())
+  if (plr && sBattlegroundMgr->isMixBg())
     {
       plr->setFactionForRace(plr->getRace());
     }
@@ -1299,7 +1299,7 @@ void Battleground::UpdatePlayerScore(Player *Source, uint32 type, uint32 value, 
     if (itr == m_PlayerScores.end())                         // player not found...
         return;
 
-    switch(type)
+    switch (type)
     {
         case SCORE_KILLING_BLOWS:                           // Killing blows
             itr->second->KillingBlows += value;
@@ -1732,7 +1732,7 @@ void Battleground::HandleTriggerBuff(uint64 const& go_guid)
     SpawnBGObject(index, BUFF_RESPAWN_TIME);
 }
 
-void Battleground::HandleKillPlayer(Player *player, Player *killer)
+void Battleground::HandleKillPlayer(Player* player, Player *killer)
 {
     //keep in mind that for arena this will have to be changed a bit
 

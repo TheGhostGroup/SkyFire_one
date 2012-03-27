@@ -82,7 +82,7 @@ void stripLineInvisibleChars(std::string &str)
     bool space = false;
     for (size_t pos = 0; pos < str.size(); ++pos)
     {
-        if (invChars.find(str[pos])!=std::string::npos)
+        if (invChars.find(str[pos])!= std::string::npos)
         {
             if (!space)
             {
@@ -92,7 +92,7 @@ void stripLineInvisibleChars(std::string &str)
         }
         else
         {
-            if (wpos!=pos)
+            if (wpos!= pos)
                 str[wpos++] = str[pos];
             else
                 ++wpos;
@@ -102,7 +102,7 @@ void stripLineInvisibleChars(std::string &str)
 
     if (wpos < str.size())
         str.erase(wpos,str.size());
-    if (str.find("|TInterface")!=std::string::npos)
+    if (str.find("|TInterface")!= std::string::npos)
         str.clear();
 }
 

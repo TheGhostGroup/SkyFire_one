@@ -48,7 +48,7 @@ const uint16 BattlegroundAV::GetBonusHonor(uint8 kills) //TODO: move this functi
     return Trinity::Honor::hk_honor_at_level(m_MaxLevel, kills);
 }
 
-void BattlegroundAV::HandleKillPlayer(Player *player, Player *killer)
+void BattlegroundAV::HandleKillPlayer(Player* player, Player *killer)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;
@@ -134,14 +134,14 @@ void BattlegroundAV::HandleKillUnit(Creature *unit, Player *killer)
         ChangeMineOwner(AV_SOUTH_MINE,killer->GetTeam());
 }
 
-void BattlegroundAV::HandleQuestComplete(uint32 questid, Player *player)
+void BattlegroundAV::HandleQuestComplete(uint32 questid, Player* player)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;//maybe we should log this, cause this must be a cheater or a big bug
     uint8 team = GetTeamIndexByTeamId(player->GetTeam());
     //TODO add reputation, events (including quest not available anymore, next quest availabe, go/npc de/spawning)and maybe honor
     sLog->outDebug("BG_AV Quest %i completed",questid);
-    switch(questid)
+    switch (questid)
     {
         case AV_QUEST_A_SCRAPS1:
         case AV_QUEST_A_SCRAPS2:
@@ -495,7 +495,7 @@ void BattlegroundAV::HandleAreaTrigger(Player *Source, uint32 Trigger)
         return;
 
     uint32 SpellId = 0;
-    switch(Trigger)
+    switch (Trigger)
     {
         case 95:
         case 2608:
@@ -534,7 +534,7 @@ void BattlegroundAV::UpdatePlayerScore(Player* Source, uint32 type, uint32 value
     if (itr == m_PlayerScores.end())                         // player not found...
         return;
 
-    switch(type)
+    switch (type)
     {
         case SCORE_GRAVEYARDS_ASSAULTED:
             ((BattlegroundAVScore*)itr->second)->GraveyardsAssaulted += value;
@@ -786,7 +786,7 @@ void BattlegroundAV::DePopulateNode(BG_AV_Nodes node)
         DelCreature(node);
 
     //remove bonus honor aura trigger creature when node is lost
-    if(node < BG_AV_NODES_MAX)//fail safe
+    if (node < BG_AV_NODES_MAX)//fail safe
         DelCreature(node + 302);//NULL checks are in DelCreature! 0-302 spirit guides
 }
 
@@ -858,7 +858,7 @@ void BattlegroundAV::EventPlayerClickedOnFlag(Player *source, GameObject* target
     sLog->outDebug("BG_AV using gameobject %i with type %i",target_obj->GetEntry(),object);
     if (object < 0)
         return;
-    switch(target_obj->GetEntry())
+    switch (target_obj->GetEntry())
     {
         case BG_AV_OBJECTID_BANNER_A:
         case BG_AV_OBJECTID_BANNER_A_B:

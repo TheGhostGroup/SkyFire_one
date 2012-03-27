@@ -11292,7 +11292,7 @@ void Unit::RemovePetAura(PetAura const* petSpell)
 
 Pet* Unit::CreateTamedPetFrom(Creature* creatureTarget, uint32 spell_id)
 {
-    if (GetTypeId()!=TYPEID_PLAYER)
+    if (GetTypeId()!= TYPEID_PLAYER)
         return NULL;
 
     Pet* pet = new Pet(ToPlayer(), HUNTER_PET);

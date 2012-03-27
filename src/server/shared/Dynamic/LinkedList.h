@@ -202,7 +202,7 @@ class LinkedListHead
                     return (_Ptr == _Right._Ptr);
                 }
 
-                bool operator!=(Iterator const &_Right) const
+                bool operator!= (Iterator const &_Right) const
                 {                                           // test for iterator inequality
                     return (!(*this == _Right));
                 }
@@ -212,7 +212,7 @@ class LinkedListHead
                     return (_Ptr != _Right);
                 }
 
-                bool operator!=(pointer const &_Right) const
+                bool operator!= (pointer const &_Right) const
                 {                                           // test for pointer equality
                     return (!(*this == _Right));
                 }
@@ -222,7 +222,7 @@ class LinkedListHead
                     return (_Ptr == &_Right);
                 }
 
-                bool operator!=(const_reference _Right) const
+                bool operator!= (const_reference _Right) const
                 {                                           // test for reference equality
                     return (_Ptr != &_Right);
                 }

@@ -196,7 +196,7 @@ void BattlegroundMgr::BuildBattlegroundStatusPacket(WorldPacket *data, Battlegro
     *data << uint8(bg->isRated());                          // 1 for rated match, 0 for bg or non rated match
 
     *data << uint32(StatusID);                              // status
-    switch(StatusID)
+    switch (StatusID)
     {
         case STATUS_WAIT_QUEUE:                             // status_in_queue
             *data << uint32(Time1);                         // average wait time, milliseconds
@@ -283,10 +283,10 @@ void BattlegroundMgr::BuildPvpLogDataPacket(WorldPacket *data, Battleground *bg)
         }
         *data << (int32)itr->second->DamageDone;             // damage done
         *data << (int32)itr->second->HealingDone;            // healing done
-        switch(bg->GetTypeID(true))                              // battleground specific things
+        switch (bg->GetTypeID(true))                              // battleground specific things
         {
             case BATTLEGROUND_RB:
-                switch(bg->GetMapId())
+                switch (bg->GetMapId())
                 {
                     case 489:
                         *data << (uint32)0x00000002;        // count of next fields
@@ -521,7 +521,7 @@ Battleground * BattlegroundMgr::CreateNewBattleground(BattlegroundTypeId bgTypeI
 
     Battleground *bg = NULL;
     // create a copy of the BG template
-    switch(bgTypeId)
+    switch (bgTypeId)
     {
         case BATTLEGROUND_AV:
             bg = new BattlegroundAV(*(BattlegroundAV*)bg_template);
@@ -593,7 +593,7 @@ uint32 BattlegroundMgr::CreateBattleground(BattlegroundTypeId bgTypeId, bool IsA
 {
     // Create the BG
     Battleground *bg = NULL;
-    switch(bgTypeId)
+    switch (bgTypeId)
     {
         case BATTLEGROUND_AV: bg = new BattlegroundAV; break;
         case BATTLEGROUND_WS: bg = new BattlegroundWS; break;
@@ -904,10 +904,10 @@ void BattlegroundMgr::SendToBattleground(Player *pl, uint32 instanceId, Battlegr
         float x, y, z, O;
     uint32 teamchoice;
         uint32 team = pl->GetBGTeam();
-        if(!IsArenaType(bgTypeId) && sBattlegroundMgr->isMixBg())
+        if (!IsArenaType(bgTypeId) && sBattlegroundMgr->isMixBg())
         {
             teamchoice = urand(0, 2);
-            if(teamchoice == 1 && bg->GetPlayersCountByTeam(HORDE) >= bg->GetPlayersCountByTeam(ALLIANCE) || bg->GetPlayersCountByTeam(HORDE) > bg->GetPlayersCountByTeam(ALLIANCE)) // alliance team
+            if (teamchoice == 1 && bg->GetPlayersCountByTeam(HORDE) >= bg->GetPlayersCountByTeam(ALLIANCE) || bg->GetPlayersCountByTeam(HORDE) > bg->GetPlayersCountByTeam(ALLIANCE)) // alliance team
             {
                 pl->setFactionForRace(1);
                 pl->SetBGTeam(ALLIANCE); //AH
@@ -954,7 +954,7 @@ bool BattlegroundMgr::IsArenaType(BattlegroundTypeId bgTypeId)
 
 BattlegroundQueueTypeId BattlegroundMgr::BGQueueTypeId(BattlegroundTypeId bgTypeId, uint8 arenaType)
 {
-    switch(bgTypeId)
+    switch (bgTypeId)
     {
         case BATTLEGROUND_WS:
             return BATTLEGROUND_QUEUE_WS;
@@ -976,7 +976,7 @@ BattlegroundQueueTypeId BattlegroundMgr::BGQueueTypeId(BattlegroundTypeId bgType
         case BATTLEGROUND_BE:
         case BATTLEGROUND_DS:
         case BATTLEGROUND_RV:
-            switch(arenaType)
+            switch (arenaType)
             {
                 case ARENA_TYPE_2v2:
                     return BATTLEGROUND_QUEUE_2v2;
@@ -994,7 +994,7 @@ BattlegroundQueueTypeId BattlegroundMgr::BGQueueTypeId(BattlegroundTypeId bgType
 
 BattlegroundTypeId BattlegroundMgr::BGTemplateId(BattlegroundQueueTypeId bgQueueTypeId)
 {
-    switch(bgQueueTypeId)
+    switch (bgQueueTypeId)
     {
         case BATTLEGROUND_QUEUE_WS:
             return BATTLEGROUND_WS;
@@ -1021,7 +1021,7 @@ BattlegroundTypeId BattlegroundMgr::BGTemplateId(BattlegroundQueueTypeId bgQueue
 
 uint8 BattlegroundMgr::BGArenaType(BattlegroundQueueTypeId bgQueueTypeId)
 {
-    switch(bgQueueTypeId)
+    switch (bgQueueTypeId)
     {
         case BATTLEGROUND_QUEUE_2v2:
             return ARENA_TYPE_2v2;

@@ -89,7 +89,7 @@ void BattlegroundRL::RemovePlayer(Player* /*plr*/, uint64 /*guid*/)
     CheckArenaWinConditions();
 }
 
-void BattlegroundRL::HandleKillPlayer(Player *player, Player *killer)
+void BattlegroundRL::HandleKillPlayer(Player* player, Player *killer)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;
@@ -106,7 +106,7 @@ void BattlegroundRL::HandleKillPlayer(Player *player, Player *killer)
     CheckArenaWinConditions();
 }
 
-bool BattlegroundRL::HandlePlayerUnderMap(Player *player)
+bool BattlegroundRL::HandlePlayerUnderMap(Player* player)
 {
     player->TeleportTo(GetMapId(),1285.810547,1667.896851,39.957642,player->GetOrientation(),false);
     return true;
@@ -120,7 +120,7 @@ void BattlegroundRL::HandleAreaTrigger(Player *Source, uint32 Trigger)
 
     //uint32 SpellId = 0;
     //uint64 buff_guid = 0;
-    switch(Trigger)
+    switch (Trigger)
     {
         case 4696:                                          // buff trigger?
         case 4697:                                          // buff trigger?

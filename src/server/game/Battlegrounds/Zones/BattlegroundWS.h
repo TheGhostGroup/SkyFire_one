@@ -17,7 +17,6 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef __BATTLEGROUNDWS_H
 #define __BATTLEGROUNDWS_H
 
@@ -194,7 +193,7 @@ class BattlegroundWS : public Battleground
 
         void RemovePlayer(Player *plr, uint64 guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
-        void HandleKillPlayer(Player *player, Player *killer);
+        void HandleKillPlayer(Player* player, Player *killer);
         bool SetupBattleground();
         virtual void Reset();
         void EndBattleground(uint32 winner);

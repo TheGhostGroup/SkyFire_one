@@ -376,7 +376,7 @@ void BattlegroundEY::HandleAreaTrigger(Player *Source, uint32 Trigger)
     if (!Source->isAlive())                                  //hack code, must be removed later
         return;
 
-    switch(Trigger)
+    switch (Trigger)
     {
         case TR_BLOOD_ELF_POINT:
             if (m_PointState[BLOOD_ELF] == EY_POINT_UNDER_CONTROL && m_PointOwnedByTeam[BLOOD_ELF] == Source->GetTeam())
@@ -575,7 +575,7 @@ void BattlegroundEY::RespawnFlagAfterDrop()
     SetDroppedFlagGUID(0);
 }
 
-void BattlegroundEY::HandleKillPlayer(Player *player, Player *killer)
+void BattlegroundEY::HandleKillPlayer(Player* player, Player *killer)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;
@@ -812,7 +812,7 @@ void BattlegroundEY::UpdatePlayerScore(Player *Source, uint32 type, uint32 value
     if (itr == m_PlayerScores.end())                         // player not found
         return;
 
-    switch(type)
+    switch (type)
     {
         case SCORE_FLAG_CAPTURES:                           // flags captured
             ((BattlegroundEYScore*)itr->second)->FlagCaptures += value;
@@ -878,7 +878,7 @@ WorldSafeLocsEntry const *BattlegroundEY::GetClosestGraveYard(Player* player)
 {
     uint32 g_id = 0;
 
-    switch(player->GetTeam())
+    switch (player->GetTeam())
     {
         case ALLIANCE: g_id = EY_GRAVEYARD_MAIN_ALLIANCE; break;
         case HORDE:    g_id = EY_GRAVEYARD_MAIN_HORDE;    break;

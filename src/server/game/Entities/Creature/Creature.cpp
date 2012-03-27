@@ -110,10 +110,10 @@ uint32 CreatureTemplate::GetRandomValidModelId() const
 
 uint32 CreatureTemplate::GetFirstValidModelId() const
 {
-    if(Modelid1) return Modelid1;
-    if(Modelid2) return Modelid2;
-    if(Modelid3) return Modelid3;
-    if(Modelid4) return Modelid4;
+    if (Modelid1) return Modelid1;
+    if (Modelid2) return Modelid2;
+    if (Modelid3) return Modelid3;
+    if (Modelid4) return Modelid4;
     return 0;
 }
 

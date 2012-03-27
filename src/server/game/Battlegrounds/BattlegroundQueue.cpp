@@ -216,7 +216,7 @@ GroupQueueInfo * BattlegroundQueue::AddGroup(Player *leader, Group* grp, Battleg
                 // System message
                 else
                 {
-       	if(sBattlegroundMgr->isMixBg())
+       	if (sBattlegroundMgr->isMixBg())
       		 {
                     sWorld->SendWorldText(LANG_BG_QUEUE_ANNOUNCE_WORLD2, bgName, q_min_level, q_max_level,
                         qAlliance+qHorde, (MinPlayers * 2 > (qAlliance + qHorde)) ? MinPlayers * 2 - (qAlliance + qHorde) : (uint32)0);
@@ -641,10 +641,10 @@ uint32 BGPlayerCounter = 0;
             {
                 m_SelectionPools[i].AddGroup(*(itr_team[i]), maxPlayers);
 			//Time for the worlds biggest HACK =D but hay it works
-				if(bg_template->isBattleground() && sBattlegroundMgr->isMixBg())
+				if (bg_template->isBattleground() && sBattlegroundMgr->isMixBg())
 				{
 					BGPlayerCounter = BGPlayerCounter + int32(m_SelectionPools[BG_TEAM_ALLIANCE].GetPlayerCount());
-					if(i != BG_TEAM_ALLIANCE)
+					if (i != BG_TEAM_ALLIANCE)
 						BGPlayerCounter =  int32(m_SelectionPools[BG_TEAM_ALLIANCE].GetPlayerCount()) +  int32(m_SelectionPools[BG_TEAM_HORDE].GetPlayerCount());
 					if (BGPlayerCounter >= minPlayers * 2)
 						break;
@@ -681,7 +681,7 @@ uint32 BGPlayerCounter = 0;
         return true;
     //return true if there are enough players in selection pools - enable to work .debug bg command correctly
 
-	if(bg_template->isBattleground() && sBattlegroundMgr->isMixBg())
+	if (bg_template->isBattleground() && sBattlegroundMgr->isMixBg())
 	{
 		int32 Ali   = int32(m_SelectionPools[BG_TEAM_ALLIANCE].GetPlayerCount());
 		int32 Horde = int32(m_SelectionPools[BG_TEAM_HORDE].GetPlayerCount());
@@ -832,7 +832,7 @@ void BattlegroundQueue::Update(BattlegroundTypeId bgTypeId, BattlegroundBracketI
             //this switch can be much shorter
             MaxPlayersPerTeam = arenaType;
             MinPlayersPerTeam = arenaType;
-            /*switch(arenaType)
+            /*switch (arenaType)
             {
             case ARENA_TYPE_2v2:
                 MaxPlayersPerTeam = 2;

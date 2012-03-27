@@ -13601,7 +13601,7 @@ bool Player::SatisfyQuestReputation(Quest const* qInfo, bool msg)
 bool Player::SatisfyQuestStatus(Quest const* qInfo, bool msg)
 {
     QuestStatusMap::iterator itr = mQuestStatus.find(qInfo->GetQuestId());
-    if  (itr != mQuestStatus.end() && itr->second.m_status != QUEST_STATUS_NONE)
+    if (itr != mQuestStatus.end() && itr->second.m_status != QUEST_STATUS_NONE)
     {
         if (msg)
             SendCanTakeQuestResponse(INVALIDREASON_QUEST_ALREADY_ON);

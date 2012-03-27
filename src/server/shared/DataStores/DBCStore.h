@@ -49,7 +49,7 @@ class DBCStorage
             m_stringPoolList.push_back(dbc.AutoProduceStrings(fmt,(char*)m_dataTable));
 
             // error in dbc file at loading if NULL
-            return indexTable!=NULL;
+            return indexTable!= NULL;
         }
 
         bool LoadStringsFrom(char const* fn)
