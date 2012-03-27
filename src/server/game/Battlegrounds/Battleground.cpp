@@ -44,7 +44,7 @@ namespace Trinity
                 : i_msgtype(msgtype), i_textId(textId), i_source(source), i_args(args) {}
             void operator()(WorldPacket& data, int32 loc_idx)
             {
-                char const* text = sObjectMgr->GetTrinityString(i_textId,loc_idx);
+                char const* text = sObjectMgr->GetSkyFireString(i_textId,loc_idx);
 
                 if (i_args)
                 {
@@ -89,9 +89,9 @@ namespace Trinity
                 : i_msgtype(msgtype), i_textId(textId), i_source(source), i_arg1(arg1), i_arg2(arg2) {}
             void operator()(WorldPacket& data, int32 loc_idx)
             {
-                char const* text = sObjectMgr->GetTrinityString(i_textId,loc_idx);
-                char const* arg1str = i_arg1 ? sObjectMgr->GetTrinityString(i_arg1,loc_idx) : "";
-                char const* arg2str = i_arg2 ? sObjectMgr->GetTrinityString(i_arg2,loc_idx) : "";
+                char const* text = sObjectMgr->GetSkyFireString(i_textId,loc_idx);
+                char const* arg1str = i_arg1 ? sObjectMgr->GetSkyFireString(i_arg1,loc_idx) : "";
+                char const* arg2str = i_arg2 ? sObjectMgr->GetSkyFireString(i_arg2,loc_idx) : "";
 
                 char str [2048];
                 snprintf(str,2048,text, arg1str, arg2str);
@@ -779,8 +779,8 @@ void Battleground::EndBattleground(uint32 winner)
             {
                 // update achievement BEFORE personal rating update
                 ArenaTeamMember* member = winner_arena_team->GetMember(plr->GetGUID());
-                if (member)
-                    plr->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_WIN_RATED_ARENA, member->personal_rating);
+                //if (member)
+                    //plr->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_WIN_RATED_ARENA, member->personal_rating);
 
                 winner_arena_team->MemberWon(plr,loser_rating);
             }
@@ -789,7 +789,7 @@ void Battleground::EndBattleground(uint32 winner)
                 loser_arena_team->MemberLost(plr,winner_rating);
 
                 // Arena lost => reset the win_rated_arena having the "no_loose" condition
-                plr->GetAchievementMgr().ResetAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_WIN_RATED_ARENA, ACHIEVEMENT_CRITERIA_CONDITION_NO_LOOSE);
+                //plr->GetAchievementMgr().ResetAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_WIN_RATED_ARENA, ACHIEVEMENT_CRITERIA_CONDITION_NO_LOOSE);
             }
         }
 
@@ -808,8 +808,6 @@ void Battleground::EndBattleground(uint32 winner)
                 if (!plr->GetRandomWinner())
                     plr->SetRandomWinner(true);
             }
-
-            plr->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_WIN_BG, 1);
         }
         else
         {
@@ -829,7 +827,6 @@ void Battleground::EndBattleground(uint32 winner)
         BattlegroundQueueTypeId bgQueueTypeId = BattlegroundMgr::BGQueueTypeId(GetTypeID(), GetArenaType());
         sBattlegroundMgr->BuildBattlegroundStatusPacket(&data, this, plr->GetBattlegroundQueueIndex(bgQueueTypeId), STATUS_IN_PROGRESS, TIME_TO_AUTOREMOVE, GetStartTime(), GetArenaType());
         plr->GetSession()->SendPacket(&data);
-        plr->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_BATTLEGROUND, 1);
     }
 
     if (isArena() && isRated() && winner_arena_team && loser_arena_team && winner_arena_team != loser_arena_team)
@@ -1003,9 +1000,7 @@ void Battleground::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
             plr->TeleportToBGEntryPoint();
 
         sLog->outDetail("BATTLEGROUND: Removed player %s from Battleground.", plr->GetName());
-        plr->GetAchievementMgr().ResetAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_BG_OBJECTIVE_CAPTURE, ACHIEVEMENT_CRITERIA_CONDITION_MAP, GetMapId(), true);
     }
-
     //battleground object will be deleted next Battleground::Update() call
 }
 
@@ -1123,9 +1118,6 @@ void Battleground::AddPlayer(Player *plr)
         if (GetStatus() == STATUS_WAIT_JOIN)                 // not started yet
             plr->CastSpell(plr, SPELL_PREPARATION, true);   // reduces all mana cost of spells.
     }
-
-    plr->GetAchievementMgr().ResetAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HEALING_DONE, ACHIEVEMENT_CRITERIA_CONDITION_MAP, GetMapId());
-    plr->GetAchievementMgr().ResetAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_DAMAGE_DONE, ACHIEVEMENT_CRITERIA_CONDITION_MAP, GetMapId());
 
     // setup BG group membership
     PlayerAddedToBGCheckIfBGIsRunning(plr);
@@ -1306,7 +1298,6 @@ void Battleground::UpdatePlayerScore(Player *Source, uint32 type, uint32 value, 
             break;
         case SCORE_DEATHS:                                  // Deaths
             itr->second->Deaths += value;
-            Source->GetAchievementMgr().ResetAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_BG_OBJECTIVE_CAPTURE, ACHIEVEMENT_CRITERIA_CONDITION_NO_DEATH);
             break;
         case SCORE_HONORABLE_KILLS:                         // Honorable kills
             itr->second->HonorableKills += value;
@@ -1510,7 +1501,7 @@ Creature* Battleground::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
 
     pCreature->SetHomePosition(x, y, z, o);
 
-    CreatureInfo const *cinfo = sObjectMgr->GetCreatureTemplate(entry);
+    CreatureTemplate const *cinfo = sObjectMgr->GetCreatureTemplate(entry);
     if (!cinfo)
     {
         sLog->outErrorDb("Battleground::AddCreature: entry %u does not exist.", entry);
@@ -1686,7 +1677,7 @@ void Battleground::EndNow()
 }
 
 //to be removed
-const char *Battleground::GetTrinityString(int32 entry)
+const char *Battleground::GetSkyFireString(int32 entry)
 {
     // FIXME: now we have different DBC locales and need localized message for each target client
     return sObjectMgr->GetTrinityStringForDBCLocale(entry);
@@ -1875,17 +1866,10 @@ bool Battleground::IsTeamScoreInRange(uint32 team, uint32 minScore, uint32 maxSc
     return score >= minScore && score <= maxScore;
 }
 
-void Battleground::StartTimedAchievement(AchievementCriteriaTimedTypes type, uint32 entry)
-{
-    for (BattlegroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
-        if (Player* pPlayer = sObjectMgr->GetPlayer(itr->first))
-            pPlayer->GetAchievementMgr().StartTimedAchievement(type, entry);
-}
-
 void Battleground::SetBracket(PvPDifficultyEntry const* bracketEntry)
 {
-    m_BracketId  = bracketEntry->GetBracketId();
-    SetLevelRange(bracketEntry->minLevel,bracketEntry->maxLevel);
+    m_BracketId = bracketEntry->GetBracketId();
+    SetLevelRange(bracketEntry->minLevel, bracketEntry->maxLevel);
 }
 
 void Battleground::RewardXPAtKill(Player* plr, Player* victim)

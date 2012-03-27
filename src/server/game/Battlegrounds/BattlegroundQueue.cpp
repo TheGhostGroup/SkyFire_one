@@ -216,15 +216,15 @@ GroupQueueInfo * BattlegroundQueue::AddGroup(Player *leader, Group* grp, Battleg
                 // System message
                 else
                 {
-       	if (sBattlegroundMgr->isMixBg())
-      		 {
+        if (sBattlegroundMgr->isMixBg())
+             {
                     sWorld->SendWorldText(LANG_BG_QUEUE_ANNOUNCE_WORLD2, bgName, q_min_level, q_max_level,
                         qAlliance+qHorde, (MinPlayers * 2 > (qAlliance + qHorde)) ? MinPlayers * 2 - (qAlliance + qHorde) : (uint32)0);
-      		  }else{
+              }else{
                     sWorld->SendWorldText(LANG_BG_QUEUE_ANNOUNCE_WORLD, bgName, q_min_level, q_max_level,
                         qAlliance, (MinPlayers > qAlliance) ? MinPlayers - qAlliance : (uint32)0, qHorde, (MinPlayers > qHorde) ? MinPlayers - qHorde : (uint32)0);
                 }
-		}
+        }
             }
         }
         //release mutex
@@ -640,19 +640,19 @@ uint32 BGPlayerCounter = 0;
             if (!(*(itr_team[i]))->IsInvitedToBGInstanceGUID)
             {
                 m_SelectionPools[i].AddGroup(*(itr_team[i]), maxPlayers);
-			//Time for the worlds biggest HACK =D but hay it works
-				if (bg_template->isBattleground() && sBattlegroundMgr->isMixBg())
-				{
-					BGPlayerCounter = BGPlayerCounter + int32(m_SelectionPools[BG_TEAM_ALLIANCE].GetPlayerCount());
-					if (i != BG_TEAM_ALLIANCE)
-						BGPlayerCounter =  int32(m_SelectionPools[BG_TEAM_ALLIANCE].GetPlayerCount()) +  int32(m_SelectionPools[BG_TEAM_HORDE].GetPlayerCount());
-					if (BGPlayerCounter >= minPlayers * 2)
-						break;
-				}else{
-					if (m_SelectionPools[i].GetPlayerCount() >= minPlayers)
-						break;
-				}
-		BGPlayerCounter = 0;
+            //Time for the worlds biggest HACK =D but hay it works
+                if (bg_template->isBattleground() && sBattlegroundMgr->isMixBg())
+                {
+                    BGPlayerCounter = BGPlayerCounter + int32(m_SelectionPools[BG_TEAM_ALLIANCE].GetPlayerCount());
+                    if (i != BG_TEAM_ALLIANCE)
+                        BGPlayerCounter =  int32(m_SelectionPools[BG_TEAM_ALLIANCE].GetPlayerCount()) +  int32(m_SelectionPools[BG_TEAM_HORDE].GetPlayerCount());
+                    if (BGPlayerCounter >= minPlayers * 2)
+                        break;
+                }else{
+                    if (m_SelectionPools[i].GetPlayerCount() >= minPlayers)
+                        break;
+                }
+        BGPlayerCounter = 0;
                     break;
             }
         }
@@ -681,14 +681,14 @@ uint32 BGPlayerCounter = 0;
         return true;
     //return true if there are enough players in selection pools - enable to work .debug bg command correctly
 
-	if (bg_template->isBattleground() && sBattlegroundMgr->isMixBg())
-	{
-		int32 Ali   = int32(m_SelectionPools[BG_TEAM_ALLIANCE].GetPlayerCount());
-		int32 Horde = int32(m_SelectionPools[BG_TEAM_HORDE].GetPlayerCount());
-		return (Ali + Horde) >= minPlayers * 2;
-	}else{
-		 return m_SelectionPools[BG_TEAM_ALLIANCE].GetPlayerCount() >= minPlayers && m_SelectionPools[BG_TEAM_HORDE].GetPlayerCount() >= minPlayers;
-	}
+    if (bg_template->isBattleground() && sBattlegroundMgr->isMixBg())
+    {
+        int32 Ali   = int32(m_SelectionPools[BG_TEAM_ALLIANCE].GetPlayerCount());
+        int32 Horde = int32(m_SelectionPools[BG_TEAM_HORDE].GetPlayerCount());
+        return (Ali + Horde) >= minPlayers * 2;
+    }else{
+         return m_SelectionPools[BG_TEAM_ALLIANCE].GetPlayerCount() >= minPlayers && m_SelectionPools[BG_TEAM_HORDE].GetPlayerCount() >= minPlayers;
+    }
 }
 
 // this method will check if we can invite players to same faction skirmish match

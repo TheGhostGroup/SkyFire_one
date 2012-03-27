@@ -25,7 +25,7 @@
 #include "ObjectAccessor.h"
 #include "World.h"
 #include "WorldSocketMgr.h"
-#include "Database/DatabaseEnv.h"
+#include "DatabaseEnv.h"
 #include "ScriptMgr.h"
 #include "BattlegroundMgr.h"
 #include "MapManager.h"
@@ -88,10 +88,10 @@ void WorldRunnable::run()
     // sScriptMgr->OnShutdown(); //NYI
 
     sWorld->KickAll();                                       // save and kick all players
-    sWorld->UpdateSessions( 1 );                             // real players unload required UpdateSessions call
+    sWorld->UpdateSessions(1);                             // real players unload required UpdateSessions call
 
     // unload battleground templates before different singletons destroyed
-    sBattlegroundMgr->DeleteAlllBattlegrounds();
+    sBattlegroundMgr->DeleteAllBattlegrounds();
 
     sWorldSocketMgr->StopNetwork();
 

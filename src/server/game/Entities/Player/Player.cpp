@@ -20,7 +20,8 @@
 
 #include "Common.h"
 #include "Language.h"
-#include "Database/DatabaseEnv.h"
+#include "DatabaseEnv.h"
+#include "DatabaseImpl.h"
 #include "Log.h"
 #include "Opcodes.h"
 #include "ObjectMgr.h"
@@ -60,7 +61,6 @@
 #include "OutdoorPvPMgr.h"
 #include "ArenaTeam.h"
 #include "Chat.h"
-#include "Database/DatabaseImpl.h"
 #include "Spell.h"
 #include "SocialMgr.h"
 #include "Mail.h"
@@ -14738,22 +14738,37 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
     else if (mapEntry && mapEntry->IsBattlegroundOrArena())
     {
         Battleground *currentBg = NULL;
-        if (m_bgData.bgInstanceID)                                                //saved in Battleground
-            currentBg = sBattlegroundMgr->GetBattleground(m_bgData.bgInstanceID);
+        if (m_bgData.bgInstanceID)      // saved in Battleground
+            currentBg = sBattlegroundMgr->GetBattleground(m_bgData.bgInstanceID, BATTLEGROUND_TYPE_NONE);
 
         bool player_at_bg = currentBg && currentBg->IsPlayerInBattleground(GetGUID());
 
         if (player_at_bg && currentBg->GetStatus() != STATUS_WAIT_LEAVE)
         {
-            uint32 bgQueueTypeId = sBattlegroundMgr->BGQueueTypeId(currentBg->GetTypeID(), currentBg->GetArenaType());
+            BattlegroundQueueTypeId bgQueueTypeId = sBattlegroundMgr->BGQueueTypeId(currentBg->GetTypeID(true), currentBg->GetArenaType());
             AddBattlegroundQueueId(bgQueueTypeId);
 
-            m_bgData.bgTypeID = currentBg->GetTypeID();
+            m_bgData.bgTypeID = currentBg->GetTypeID(true);
 
-            SetInviteForBattlegroundQueueType(bgQueueTypeId, currentBg->GetInstanceID());
+            //join player to battleground group
+            currentBg->EventPlayerLoggedIn(this, GetGUID());
+            currentBg->AddOrSetPlayerToCorrectBgGroup(this, GetGUID(), m_bgData.bgTeam);
+
+            SetInviteForBattlegroundQueueType(bgQueueTypeId,currentBg->GetInstanceID());
         }
-        // Bg was not found - go to Entry Point
-        else
+
+        // Mixed battlegrounds
+        if (m_bgData.bgTeam == 469 && sBattlegroundMgr->isMixBg())
+        {
+            setFactionForRace(1);
+            SetBGTeam(ALLIANCE); //AH
+        }
+        else if (m_bgData.bgTeam == 67 && sBattlegroundMgr->isMixBg())
+        {
+            setFactionForRace(2);
+            SetBGTeam(HORDE); //AH
+        }
+        else     // Bg was not found - go to Entry Point
         {
             // leave bg
             if (player_at_bg)
@@ -14761,12 +14776,11 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
 
             // Do not look for instance if bg not found
             const WorldLocation& _loc = GetBattlegroundEntryPoint();
-            mapId = _loc.GetMapId();
-            instanceId = 0;
+            mapId = _loc.GetMapId(); instanceId = 0;
 
             if (mapId == MAPID_INVALID) // Battleground Entry Point not found (???)
             {
-                sLog->outError("Player (guidlow %d) was in BG in database, but BG was not found, and entry point was invalid! Teleport to default race/class locations.", guid);
+                sLog->outError("Player (guidlow %d) was in BG in database, but BG was not found, and entry point was invalid! Teleport to default race/class locations.",guid);
                 RelocateToHomebind();
             }
             else
@@ -19500,7 +19514,7 @@ Battleground* Player::GetBattleground() const
     if (GetBattlegroundId() == 0)
         return NULL;
 
-    return sBattlegroundMgr->GetBattleground(GetBattlegroundId());
+    return sBattlegroundMgr->GetBattleground(GetBattlegroundId(), m_bgData.bgTypeID);
 }
 
 bool Player::InArena() const
@@ -19512,53 +19526,22 @@ bool Player::InArena() const
     return true;
 }
 
-bool Player::GetBGAccessByLevel(uint32 bgTypeId) const
+bool Player::GetBGAccessByLevel(BattlegroundTypeId bgTypeId) const
 {
     // get a template bg instead of running one
     Battleground *bg = sBattlegroundMgr->GetBattlegroundTemplate(bgTypeId);
     if (!bg)
         return false;
 
-    if (getLevel() < bg->GetMinLevel() || getLevel() > bg->GetMaxLevel())
+    // limit check leel to dbc compatible level range
+    uint32 level = getLevel();
+    if (level > DEFAULT_MAX_LEVEL)
+        level = DEFAULT_MAX_LEVEL;
+
+    if (level < bg->GetMinLevel() || level > bg->GetMaxLevel())
         return false;
 
     return true;
-}
-
-uint32 Player::GetMinLevelForBattlegroundQueueId(uint32 queue_id)
-{
-    if (queue_id < 1)
-        queue_id = 0;
-
-    if (queue_id >=6)
-        queue_id = 6;
-
-    return 10*(queue_id+1);
-}
-
-uint32 Player::GetMaxLevelForBattlegroundQueueId(uint32 queue_id)
-{
-    if (queue_id >=6)
-        return 255;                                         // hardcoded max level
-
-    return 10*(queue_id+2)-1;
-}
-
-//TODO make this more generic - current implementation is wrong
-uint32 Player::GetBattlegroundQueueIdFromLevel() const
-{
-    uint32 level = getLevel();
-    if (level <= 19)
-        return 0;
-    else if (level > 69)
-        return 6;
-    else
-        return level/10 - 1;                                // 20..29 -> 1, 30-39 -> 2, ...
-    /*
-    ASSERT(bgTypeId < MAX_BATTLEGROUND_TYPES);
-    Battleground *bg = sBattlegroundMgr->GetBattlegroundTemplate(bgTypeId);
-    ASSERT(bg);
-    return (getLevel() - bg->GetMinLevel()) / 10;*/
 }
 
 float Player::GetReputationPriceDiscount(Creature const* creature) const

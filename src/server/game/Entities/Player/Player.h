@@ -26,7 +26,9 @@
 #include "Unit.h"
 #include "Item.h"
 
-#include "Database/DatabaseEnv.h"
+#include "DatabaseEnv.h"
+#include "Battleground.h"
+#include "DBCEnums.h"
 #include "DBCStores.h"
 #include "NPCHandler.h"
 #include "QuestDef.h"
@@ -1810,55 +1812,56 @@ class Player : public Unit, public GridObject<Player>
         void SendNotifyLootItemRemoved(uint8 lootSlot);
         void SendNotifyLootMoneyRemoved();
 
-        /*********************************************************/
+         /*********************************************************/
         /***               BATTLEGROUND SYSTEM                 ***/
         /*********************************************************/
 
         bool InBattleground()       const                { return m_bgData.bgInstanceID != 0; }
         bool InArena()              const;
         uint32 GetBattlegroundId()  const                { return m_bgData.bgInstanceID; }
+        BattlegroundTypeId GetBattlegroundTypeId() const { m_bgData.bgTypeID; }
         Battleground* GetBattleground() const;
-
-        static uint32 GetMinLevelForBattlegroundQueueId(uint32 queue_id);
-        static uint32 GetMaxLevelForBattlegroundQueueId(uint32 queue_id);
-        uint32 GetBattlegroundQueueIdFromLevel() const;
 
         bool InBattlegroundQueue() const
         {
             for (uint8 i = 0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; ++i)
-                if (m_bgBattlegroundQueueID[i].bgQueueType != 0)
+                if (m_bgBattlegroundQueueID[i].bgQueueTypeId != BATTLEGROUND_QUEUE_NONE)
                     return true;
             return false;
         }
 
-        uint32 GetBattlegroundQueueId(uint32 index) const { return m_bgBattlegroundQueueID[index].bgQueueType; }
-        uint32 GetBattlegroundQueueIndex(uint32 bgQueueType) const
+        BattlegroundQueueTypeId GetBattlegroundQueueTypeId(uint32 index) const { return m_bgBattlegroundQueueID[index].bgQueueTypeId; }
+        uint32 GetBattlegroundQueueIndex(BattlegroundQueueTypeId bgQueueTypeId) const
         {
             for (uint8 i = 0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; ++i)
-                if (m_bgBattlegroundQueueID[i].bgQueueType == bgQueueType)
+                if (m_bgBattlegroundQueueID[i].bgQueueTypeId == bgQueueTypeId)
                     return i;
             return PLAYER_MAX_BATTLEGROUND_QUEUES;
         }
-        bool IsInvitedForBattlegroundQueueType(uint32 bgQueueType) const
+        bool IsInvitedForBattlegroundQueueType(BattlegroundQueueTypeId bgQueueTypeId) const
         {
             for (uint8 i = 0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; ++i)
-                if (m_bgBattlegroundQueueID[i].bgQueueType == bgQueueType)
+                if (m_bgBattlegroundQueueID[i].bgQueueTypeId == bgQueueTypeId)
                     return m_bgBattlegroundQueueID[i].invitedToInstance != 0;
-            return PLAYER_MAX_BATTLEGROUND_QUEUES;
+            return false;
         }
-        bool InBattlegroundQueueForBattlegroundQueueType(uint32 bgQueueType) const
+        bool InBattlegroundQueueForBattlegroundQueueType(BattlegroundQueueTypeId bgQueueTypeId) const
         {
-            return GetBattlegroundQueueIndex(bgQueueType) < PLAYER_MAX_BATTLEGROUND_QUEUES;
+            return GetBattlegroundQueueIndex(bgQueueTypeId) < PLAYER_MAX_BATTLEGROUND_QUEUES;
         }
 
-        void SetBattlegroundId(uint32 val)  { m_bgData.bgInstanceID = val; }
-        uint32 AddBattlegroundQueueId(uint32 val)
+        void SetBattlegroundId(uint32 val, BattlegroundTypeId bgTypeId)
         {
-            for (uint8 i = 0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; ++i)
+            m_bgData.bgInstanceID = val;
+            m_bgData.bgTypeID = bgTypeId;
+        }
+        uint32 AddBattlegroundQueueId(BattlegroundQueueTypeId val)
+        {
+            for (uint8 i=0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; ++i)
             {
-                if (m_bgBattlegroundQueueID[i].bgQueueType == 0 || m_bgBattlegroundQueueID[i].bgQueueType == val)
+                if (m_bgBattlegroundQueueID[i].bgQueueTypeId == BATTLEGROUND_QUEUE_NONE || m_bgBattlegroundQueueID[i].bgQueueTypeId == val)
                 {
-                    m_bgBattlegroundQueueID[i].bgQueueType = val;
+                    m_bgBattlegroundQueueID[i].bgQueueTypeId = val;
                     m_bgBattlegroundQueueID[i].invitedToInstance = 0;
                     return i;
                 }
@@ -1867,42 +1870,38 @@ class Player : public Unit, public GridObject<Player>
         }
         bool HasFreeBattlegroundQueueId()
         {
-            for (uint8 i = 0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; ++i)
-                if (m_bgBattlegroundQueueID[i].bgQueueType == 0)
+            for (uint8 i=0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; ++i)
+                if (m_bgBattlegroundQueueID[i].bgQueueTypeId == BATTLEGROUND_QUEUE_NONE)
                     return true;
             return false;
         }
-        void RemoveBattlegroundQueueId(uint32 val)
+        void RemoveBattlegroundQueueId(BattlegroundQueueTypeId val)
         {
-            for (uint8 i = 0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; ++i)
+            for (uint8 i=0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; ++i)
             {
-                if (m_bgBattlegroundQueueID[i].bgQueueType == val)
+                if (m_bgBattlegroundQueueID[i].bgQueueTypeId == val)
                 {
-                    m_bgBattlegroundQueueID[i].bgQueueType = 0;
+                    m_bgBattlegroundQueueID[i].bgQueueTypeId = BATTLEGROUND_QUEUE_NONE;
                     m_bgBattlegroundQueueID[i].invitedToInstance = 0;
                     return;
                 }
             }
         }
-        void SetInviteForBattlegroundQueueType(uint32 bgQueueType, uint32 instanceId)
+        void SetInviteForBattlegroundQueueType(BattlegroundQueueTypeId bgQueueTypeId, uint32 instanceId)
         {
-            for (uint8 i = 0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; ++i)
-                if (m_bgBattlegroundQueueID[i].bgQueueType == bgQueueType)
+            for (uint8 i=0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; ++i)
+                if (m_bgBattlegroundQueueID[i].bgQueueTypeId == bgQueueTypeId)
                     m_bgBattlegroundQueueID[i].invitedToInstance = instanceId;
         }
         bool IsInvitedForBattlegroundInstance(uint32 instanceId) const
         {
-            for (uint8 i = 0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; ++i)
+            for (uint8 i=0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; ++i)
                 if (m_bgBattlegroundQueueID[i].invitedToInstance == instanceId)
                     return true;
             return false;
         }
         WorldLocation const& GetBattlegroundEntryPoint() const { return m_bgData.joinPos; }
         void SetBattlegroundEntryPoint();
-        void SetBattlegroundEntryPoint(uint32 Map, float PosX, float PosY, float PosZ, float PosO)
-        {
-            m_bgData.joinPos = WorldLocation(Map, PosX, PosY, PosZ, PosO);
-        }
 
         void SetBGTeam(uint32 team) { m_bgData.bgTeam = team; }
         uint32 GetBGTeam() const { return m_bgData.bgTeam ? m_bgData.bgTeam : GetTeam(); }
@@ -1913,10 +1912,14 @@ class Player : public Unit, public GridObject<Player>
         void ReportedAfkBy(Player* reporter);
         void ClearAfkReports() { m_bgData.bgAfkReporter.clear(); }
 
-        bool GetBGAccessByLevel(uint32 bgTypeId) const;
+        bool GetBGAccessByLevel(BattlegroundTypeId bgTypeId) const;
         bool isTotalImmunity();
         bool CanUseBattlegroundObject();
+        bool isTotalImmune();
         bool CanCaptureTowerPoint();
+
+        bool GetRandomWinner() { return m_IsBGRandomWinner; }
+        void SetRandomWinner(bool isWinner);
 
         /*********************************************************/
         /***               OUTDOOR PVP SYSTEM                  ***/
@@ -2130,12 +2133,14 @@ class Player : public Unit, public GridObject<Player>
         */
         struct BgBattlegroundQueueID_Rec
         {
-            uint32 bgQueueType;
+            BattlegroundQueueTypeId bgQueueTypeId;
             uint32 invitedToInstance;
         };
 
         BgBattlegroundQueueID_Rec m_bgBattlegroundQueueID[PLAYER_MAX_BATTLEGROUND_QUEUES];
         BGData                    m_bgData;
+
+        bool m_IsBGRandomWinner;
 
         /*********************************************************/
         /***                    QUEST SYSTEM                   ***/
