@@ -635,9 +635,9 @@ struct feather_vortexAI : public ScriptedAI
     {
         if (PlayerList.size())
         {
-            for (std::list<Player*>::const_iterator plr = PlayerList.begin(); plr != PlayerList.end(); plr++)
+            for (std::list<Player*>::const_iterator player = PlayerList.begin(); player != PlayerList.end(); player++)
             {
-                if ((*plr) && pl && (*plr)->GetGUID() == pl->GetGUID())
+                if ((*player) && pl && (*player)->GetGUID() == pl->GetGUID())
                     return true;
             }
         }

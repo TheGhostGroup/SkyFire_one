@@ -7204,19 +7204,19 @@ void Unit::RemoveAllControlled()
         sLog->outCrash("Unit %u is not able to release its charm %u", GetEntry(), GetCharmGUID());
 }
 
-void Unit::AddPlayerToVision(Player* plr)
+void Unit::AddPlayerToVision(Player* player)
 {
     if (m_sharedVision.empty())
     {
         setActive(true);
         SetWorldObject(true);
     }
-    m_sharedVision.push_back(plr);
+    m_sharedVision.push_back(player);
 }
 
-void Unit::RemovePlayerFromVision(Player* plr)
+void Unit::RemovePlayerFromVision(Player* player)
 {
-    m_sharedVision.remove(plr);
+    m_sharedVision.remove(player);
     if (m_sharedVision.empty())
     {
         setActive(false);
@@ -10958,9 +10958,9 @@ void Unit::ClearComboPointHolders()
     {
         uint32 lowguid = *m_ComboPointHolders.begin();
 
-        Player* plr = sObjectMgr->GetPlayer(MAKE_NEW_GUID(lowguid, 0, HIGHGUID_PLAYER));
-        if (plr && plr->GetComboTarget() == GetGUID())         // recheck for safe
-            plr->ClearComboPoints();                        // remove also guid from m_ComboPointHolders;
+        Player* player = sObjectMgr->GetPlayer(MAKE_NEW_GUID(lowguid, 0, HIGHGUID_PLAYER));
+        if (player && player->GetComboTarget() == GetGUID())         // recheck for safe
+            player->ClearComboPoints();                        // remove also guid from m_ComboPointHolders;
         else
             m_ComboPointHolders.erase(lowguid);             // or remove manually
     }

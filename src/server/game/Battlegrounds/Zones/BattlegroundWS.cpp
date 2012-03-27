@@ -147,26 +147,26 @@ void BattlegroundWS::Update(uint32 diff)
 
             if (m_FlagDebuffState == 0 && m_FlagSpellForceTimer >= 600000)  //10 minutes
             {
-                if (Player * plr = sObjectMgr->GetPlayer(m_FlagKeepers[0]))
-                    plr->CastSpell(plr, WS_SPELL_FOCUSED_ASSAULT, true);
+                if (Player* player = sObjectMgr->GetPlayer(m_FlagKeepers[0]))
+                    player->CastSpell(player, WS_SPELL_FOCUSED_ASSAULT, true);
 
-                if (Player * plr = sObjectMgr->GetPlayer(m_FlagKeepers[1]))
-                    plr->CastSpell(plr, WS_SPELL_FOCUSED_ASSAULT, true);
+                if (Player* player = sObjectMgr->GetPlayer(m_FlagKeepers[1]))
+                    player->CastSpell(player, WS_SPELL_FOCUSED_ASSAULT, true);
 
                 m_FlagDebuffState = 1;
             }
             else if (m_FlagDebuffState == 1 && m_FlagSpellForceTimer >= 900000) //15 minutes
             {
-                if (Player * plr = sObjectMgr->GetPlayer(m_FlagKeepers[0]))
+                if (Player* player = sObjectMgr->GetPlayer(m_FlagKeepers[0]))
                 {
-                    plr->RemoveAurasDueToSpell(WS_SPELL_FOCUSED_ASSAULT);
-                    plr->CastSpell(plr, WS_SPELL_BRUTAL_ASSAULT, true);
+                    player->RemoveAurasDueToSpell(WS_SPELL_FOCUSED_ASSAULT);
+                    player->CastSpell(player, WS_SPELL_BRUTAL_ASSAULT, true);
                 }
 
-                if (Player * plr = sObjectMgr->GetPlayer(m_FlagKeepers[1]))
+                if (Player* player = sObjectMgr->GetPlayer(m_FlagKeepers[1]))
                 {
-                    plr->RemoveAurasDueToSpell(WS_SPELL_FOCUSED_ASSAULT);
-                    plr->CastSpell(plr, WS_SPELL_BRUTAL_ASSAULT, true);
+                    player->RemoveAurasDueToSpell(WS_SPELL_FOCUSED_ASSAULT);
+                    player->CastSpell(player, WS_SPELL_BRUTAL_ASSAULT, true);
                 }
                 m_FlagDebuffState = 2;
             }
@@ -209,13 +209,13 @@ void BattlegroundWS::StartingEventOpenDoors()
         SpawnBGObject(i, RESPAWN_IMMEDIATELY);
 }
 
-void BattlegroundWS::AddPlayer(Player *plr)
+void BattlegroundWS::AddPlayer(Player* player)
 {
-    Battleground::AddPlayer(plr);
+    Battleground::AddPlayer(player);
     //create score and add it to map, default values are set in constructor
     BattlegroundWGScore* sc = new BattlegroundWGScore;
 
-    m_PlayerScores[plr->GetGUID()] = sc;
+    m_PlayerScores[player->GetGUID()] = sc;
 }
 
 void BattlegroundWS::RespawnFlag(uint32 Team, bool captured)
@@ -563,30 +563,30 @@ void BattlegroundWS::EventPlayerClickedOnFlag(Player *Source, GameObject* target
     Source->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_ENTER_PVP_COMBAT);
 }
 
-void BattlegroundWS::RemovePlayer(Player *plr, uint64 guid)
+void BattlegroundWS::RemovePlayer(Player* player, uint64 guid)
 {
     // sometimes flag aura not removed :(
     if (IsAllianceFlagPickedup() && m_FlagKeepers[BG_TEAM_ALLIANCE] == guid)
     {
-        if (!plr)
+        if (!player)
         {
             sLog->outError("BattlegroundWS: Removing offline player who has the FLAG!!");
             this->SetAllianceFlagPicker(0);
             this->RespawnFlag(ALLIANCE, false);
         }
         else
-            this->EventPlayerDroppedFlag(plr);
+            this->EventPlayerDroppedFlag(player);
     }
     if (IsHordeFlagPickedup() && m_FlagKeepers[BG_TEAM_HORDE] == guid)
     {
-        if (!plr)
+        if (!player)
         {
             sLog->outError("BattlegroundWS: Removing offline player who has the FLAG!!");
             this->SetHordeFlagPicker(0);
             this->RespawnFlag(HORDE, false);
         }
         else
-            this->EventPlayerDroppedFlag(plr);
+            this->EventPlayerDroppedFlag(player);
     }
 }
 

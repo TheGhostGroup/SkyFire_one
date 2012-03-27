@@ -250,10 +250,10 @@ class BattlegroundAB : public Battleground
         ~BattlegroundAB();
 
         void Update(uint32 diff);
-        void AddPlayer(Player *plr);
+        void AddPlayer(Player* player);
         virtual void StartingEventCloseDoors();
         virtual void StartingEventOpenDoors();
-        void RemovePlayer(Player *plr, uint64 guid);
+        void RemovePlayer(Player* player, uint64 guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
         virtual bool SetupBattleground();
         virtual void Reset();

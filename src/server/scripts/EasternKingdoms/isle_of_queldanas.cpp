@@ -117,9 +117,9 @@ struct npc_greengill_slaveAI : public ScriptedAI
             PlayerGUID = caster->GetGUID();
             if (PlayerGUID)
             {
-                Player* plr = Unit::GetPlayer(*me, PlayerGUID);
-                if (plr && plr->GetQuestStatus(QUESTG) == QUEST_STATUS_INCOMPLETE)
-                    plr->KilledMonsterCredit(25086, me->GetGUID());
+                Player* player = Unit::GetPlayer(*me, PlayerGUID);
+                if (player && player->GetQuestStatus(QUESTG) == QUEST_STATUS_INCOMPLETE)
+                    player->KilledMonsterCredit(25086, me->GetGUID());
             }
             DoCast(me, ENRAGE);
             Unit* Myrmidon = me->FindNearestCreature(DM, 70);

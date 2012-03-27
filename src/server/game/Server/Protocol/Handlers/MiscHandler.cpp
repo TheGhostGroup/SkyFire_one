@@ -1042,14 +1042,14 @@ void WorldSession::HandleInspectOpcode(WorldPacket& recv_data)
 
     _player->SetSelection(guid);
 
-    Player *plr = sObjectMgr->GetPlayer(guid);
-    if (!plr)                                                // wrong player
+    Player* player = sObjectMgr->GetPlayer(guid);
+    if (!player)                                                // wrong player
         return;
 
     uint32 talent_points = 0x3D;
-    uint32 guid_size = plr->GetPackGUID().size();
+    uint32 guid_size = player->GetPackGUID().size();
     WorldPacket data(SMSG_INSPECT_TALENT, 4+talent_points);
-    data << plr->GetPackGUID();
+    data << player->GetPackGUID();
     data << uint32(talent_points);
 
     // fill by 0 talents array
@@ -1059,7 +1059,7 @@ void WorldSession::HandleInspectOpcode(WorldPacket& recv_data)
     if (sWorld->getConfig(CONFIG_TALENTS_INSPECTING) || _player->isGameMaster())
     {
         // find class talent tabs (all players have 3 talent tabs)
-        uint32 const* talentTabIds = GetTalentTabPages(plr->getClass());
+        uint32 const* talentTabIds = GetTalentTabPages(player->getClass());
 
         uint32 talentTabPos = 0;                            // pos of first talent rank in tab including all prev tabs
         for (uint32 i = 0; i < 3; ++i)
@@ -1081,7 +1081,7 @@ void WorldSession::HandleInspectOpcode(WorldPacket& recv_data)
                 uint32 curtalent_maxrank = 0;
                 for (uint32 k = 5; k > 0; --k)
                 {
-                    if (talentInfo->RankID[k-1] && plr->HasSpell(talentInfo->RankID[k-1]))
+                    if (talentInfo->RankID[k-1] && player->HasSpell(talentInfo->RankID[k-1]))
                     {
                         curtalent_maxrank = k;
                         break;
@@ -1200,15 +1200,15 @@ void WorldSession::HandleWhoisOpcode(WorldPacket& recv_data)
         return;
     }
 
-    Player *plr = sObjectMgr->GetPlayer(charname.c_str());
+    Player* player = sObjectMgr->GetPlayer(charname.c_str());
 
-    if (!plr)
+    if (!player)
     {
         SendNotification(LANG_PLAYER_NOT_EXIST_OR_OFFLINE, charname.c_str());
         return;
     }
 
-    uint32 accid = plr->GetSession()->GetAccountId();
+    uint32 accid = player->GetSession()->GetAccountId();
 
     QueryResult_AutoPtr result = LoginDatabase.PQuery("SELECT username, email, last_ip FROM account WHERE id=%u", accid);
     if (!result)

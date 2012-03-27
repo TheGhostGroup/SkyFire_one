@@ -120,8 +120,8 @@ void PlayerSocial::SetFriendNote(uint32 friend_guid, std::string note)
 
 void PlayerSocial::SendSocialList()
 {
-    Player *plr = sObjectMgr->GetPlayer(GetPlayerGUID());
-    if (!plr)
+    Player* player = sObjectMgr->GetPlayer(GetPlayerGUID());
+    if (!player)
         return;
 
     uint32 size = m_playerSocialMap.size();
@@ -132,7 +132,7 @@ void PlayerSocial::SendSocialList()
 
     for (PlayerSocialMap::iterator itr = m_playerSocialMap.begin(); itr != m_playerSocialMap.end(); ++itr)
     {
-        sSocialMgr->GetFriendInfo(plr, itr->first, itr->second);
+        sSocialMgr->GetFriendInfo(player, itr->first, itr->second);
 
         data << uint64(itr->first);                         // player guid
         data << uint32(itr->second.Flags);                  // player flag (0x1-friend?, 0x2-ignored?, 0x4-muted?)
@@ -149,7 +149,7 @@ void PlayerSocial::SendSocialList()
         }
     }
 
-    plr->GetSession()->SendPacket(&data);
+    player->GetSession()->SendPacket(&data);
     sLog->outDebug("WORLD: Sent SMSG_CONTACT_LIST");
 }
 

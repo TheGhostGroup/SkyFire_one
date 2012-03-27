@@ -6948,12 +6948,12 @@ bool ChatHandler::HandleListFreezeCommand(const char * /*args*/)
 
 bool ChatHandler::HandleGroupLeaderCommand(const char *args)
 {
-    Player* plr  = NULL;
+    Player* player  = NULL;
     Group* group = NULL;
     uint64 guid  = 0;
     char* cname  = strtok((char*)args, " ");
 
-    if (GetPlayerGroupAndGUIDByName(cname, plr, group, guid))
+    if (GetPlayerGroupAndGUIDByName(cname, player, group, guid))
         if (group && group->GetLeaderGUID() != guid)
             group->ChangeLeader(guid);
 
@@ -6962,12 +6962,12 @@ bool ChatHandler::HandleGroupLeaderCommand(const char *args)
 
 bool ChatHandler::HandleGroupDisbandCommand(const char *args)
 {
-    Player* plr  = NULL;
+    Player* player  = NULL;
     Group* group = NULL;
     uint64 guid  = 0;
     char* cname  = strtok((char*)args, " ");
 
-    if (GetPlayerGroupAndGUIDByName(cname, plr, group, guid))
+    if (GetPlayerGroupAndGUIDByName(cname, player, group, guid))
         if (group)
             group->Disband();
 
@@ -6976,12 +6976,12 @@ bool ChatHandler::HandleGroupDisbandCommand(const char *args)
 
 bool ChatHandler::HandleGroupRemoveCommand(const char *args)
 {
-    Player* plr  = NULL;
+    Player* player  = NULL;
     Group* group = NULL;
     uint64 guid  = 0;
     char* cname  = strtok((char*)args, " ");
 
-    if (GetPlayerGroupAndGUIDByName(cname, plr, group, guid, true))
+    if (GetPlayerGroupAndGUIDByName(cname, player, group, guid, true))
         if (group)
             group->RemoveMember(guid, 0);
 

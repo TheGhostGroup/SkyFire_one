@@ -371,13 +371,13 @@ bool ChatHandler::HandleGMTicketGetByIdCommand(const char* args)
     }
 
     ticket->viewed = true;
-    Player *plr = sObjectMgr->GetPlayer(ticket->playerGuid);
-    if (plr && plr->IsInWorld())
+    Player* player = sObjectMgr->GetPlayer(ticket->playerGuid);
+    if (player && player->IsInWorld())
     {
         // tell client to update display of ticket status
         WorldPacket data(SMSG_GM_TICKET_STATUS_UPDATE, 4);
         data << uint32(1);
-        plr->GetSession()->SendPacket(&data);
+        player->GetSession()->SendPacket(&data);
     }
     sTicketMgr->SaveGMTicket(ticket); // update database
 
@@ -413,13 +413,13 @@ bool ChatHandler::HandleGMTicketGetByNameCommand(const char* args)
     }
 
     ticket->viewed = true;
-    Player *plr = sObjectMgr->GetPlayer(ticket->playerGuid);
-    if (plr && plr->IsInWorld())
+    Player* player = sObjectMgr->GetPlayer(ticket->playerGuid);
+    if (player && player->IsInWorld())
     {
         // tell client to update display of ticket status
         WorldPacket data(SMSG_GM_TICKET_STATUS_UPDATE, 4);
         data << uint32(1);
-        plr->GetSession()->SendPacket(&data);
+        player->GetSession()->SendPacket(&data);
     }
     sTicketMgr->SaveGMTicket(ticket); // update database
 
@@ -464,10 +464,10 @@ bool ChatHandler::HandleGMTicketCloseByIdCommand(const char* args)
     ss << PGetParseString(LANG_COMMAND_TICKETLISTNAME, ticket->name.c_str());
     ss << PGetParseString(LANG_COMMAND_TICKETCLOSED, m_session->GetPlayer()->GetName());
     SendGlobalGMSysMessage(ss.str().c_str());
-    Player *plr = sObjectMgr->GetPlayer(ticket->playerGuid);
+    Player* player = sObjectMgr->GetPlayer(ticket->playerGuid);
     sTicketMgr->RemoveGMTicket(ticket->guid, m_session->GetPlayer()->GetGUID());
 
-    if (!plr || !plr->IsInWorld())
+    if (!player || !player->IsInWorld())
         return true;
 
     if ((float)rand_chance() < sWorld->getConfig(CONFIG_CHANCE_OF_GM_SURVEY))
@@ -475,14 +475,14 @@ bool ChatHandler::HandleGMTicketCloseByIdCommand(const char* args)
         // send survey
         WorldPacket data(SMSG_GM_TICKET_STATUS_UPDATE, 4);
         data << uint32(3); // 3 displays survey
-        plr->GetSession()->SendPacket(&data);
+        player->GetSession()->SendPacket(&data);
     }
     else
     {
         // send abandon ticket
         WorldPacket data(SMSG_GMTICKET_DELETETICKET, 4);
         data << uint32(9);
-        plr->GetSession()->SendPacket(&data);
+        player->GetSession()->SendPacket(&data);
     }
 
     return true;
@@ -538,13 +538,13 @@ bool ChatHandler::HandleGMTicketAssignToCommand(const char* args)
     }
 
     ticket->escalated = true;
-    Player *plr = sObjectMgr->GetPlayer(ticket->playerGuid);
-    if (plr && plr->IsInWorld())
+    Player* player = sObjectMgr->GetPlayer(ticket->playerGuid);
+    if (player && player->IsInWorld())
     {
         // tell client to update display of ticket status
         WorldPacket data(SMSG_GM_TICKET_STATUS_UPDATE, 4);
         data << uint32(1);
-        plr->GetSession()->SendPacket(&data);
+        player->GetSession()->SendPacket(&data);
     }
 
     ticket->assignedToGM = tarGUID;
@@ -579,8 +579,8 @@ bool ChatHandler::HandleGMTicketUnAssignCommand(const char* args)
 
     std::string gmname;
     sObjectMgr->GetPlayerNameByGUID(ticket->assignedToGM, gmname);
-    Player *plr = sObjectMgr->GetPlayer(ticket->assignedToGM);
-    if (plr && plr->IsInWorld() && plr->GetSession()->GetSecurity() > cplr->GetSession()->GetSecurity())
+    Player* player = sObjectMgr->GetPlayer(ticket->assignedToGM);
+    if (player && player->IsInWorld() && player->GetSession()->GetSecurity() > cplr->GetSession()->GetSecurity())
     {
         SendSysMessage(LANG_COMMAND_TICKETUNASSIGNSECURITY);
         return true;
@@ -673,14 +673,14 @@ bool ChatHandler::HandleGMTicketDeleteByIdCommand(const char* args)
     ss << PGetParseString(LANG_COMMAND_TICKETLISTNAME, ticket->name.c_str());
     ss << PGetParseString(LANG_COMMAND_TICKETDELETED, m_session->GetPlayer()->GetName());
     SendGlobalGMSysMessage(ss.str().c_str());
-    Player *plr = sObjectMgr->GetPlayer(ticket->playerGuid);
+    Player* player = sObjectMgr->GetPlayer(ticket->playerGuid);
     sTicketMgr->DeleteGMTicketPermanently(ticket->guid);
-    if (plr && plr->IsInWorld())
+    if (player && player->IsInWorld())
     {
         // Force abandon ticket
         WorldPacket data(SMSG_GMTICKET_DELETETICKET, 4);
         data << uint32(9);
-        plr->GetSession()->SendPacket(&data);
+        player->GetSession()->SendPacket(&data);
     }
 
     ticket = NULL;

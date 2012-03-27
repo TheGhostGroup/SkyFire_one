@@ -69,18 +69,18 @@ void BattlegroundRL::StartingEventOpenDoors()
         SpawnBGObject(i, 60);
 }
 
-void BattlegroundRL::AddPlayer(Player *plr)
+void BattlegroundRL::AddPlayer(Player* player)
 {
-    Battleground::AddPlayer(plr);
+    Battleground::AddPlayer(player);
     //create score and add it to map, default values are set in constructor
     BattlegroundRLScore* sc = new BattlegroundRLScore;
 
-    m_PlayerScores[plr->GetGUID()] = sc;
+    m_PlayerScores[player->GetGUID()] = sc;
 
     UpdateArenaWorldState();
 }
 
-void BattlegroundRL::RemovePlayer(Player* /*plr*/, uint64 /*guid*/)
+void BattlegroundRL::RemovePlayer(Player* /*player*/, uint64 /*guid*/)
 {
     if (GetStatus() == STATUS_WAIT_LEAVE)
         return;

@@ -36,29 +36,29 @@ static void AttemptJoin(Player* _player)
     HashMapHolder<Player>::MapType const& players = sObjectAccessor->GetPlayers();
     for (HashMapHolder<Player>::MapType::const_iterator iter = players.begin(); iter != players.end(); ++iter)
     {
-        Player *plr = iter->second;
+        Player* player = iter->second;
 
         // skip enemies and self
-        if (!plr || plr == _player || plr->GetTeam() != _player->GetTeam())
+        if (!player || player == _player || player->GetTeam() != _player->GetTeam())
             continue;
 
         //skip players not in world
-        if (!plr->IsInWorld())
+        if (!player->IsInWorld())
             continue;
 
         // skip not auto add, not group leader cases
-        if (!plr->GetSession()->LookingForGroup_auto_add || plr->GetGroup() && plr->GetGroup()->GetLeaderGUID() != plr->GetGUID())
+        if (!player->GetSession()->LookingForGroup_auto_add || player->GetGroup() && player->GetGroup()->GetLeaderGUID() != player->GetGUID())
             continue;
 
         // skip non auto-join or empty slots, or non compatible slots
-        if (!plr->m_lookingForGroup.more.canAutoJoin() || !_player->m_lookingForGroup.HaveInSlot(plr->m_lookingForGroup.more))
+        if (!player->m_lookingForGroup.more.canAutoJoin() || !_player->m_lookingForGroup.HaveInSlot(player->m_lookingForGroup.more))
             continue;
 
         // attempt create group, or skip
-        if (!plr->GetGroup())
+        if (!player->GetGroup())
         {
             Group* group = new Group;
-            if (!group->Create(plr->GetGUID(), plr->GetName()))
+            if (!group->Create(player->GetGUID(), player->GetName()))
             {
                 delete group;
                 continue;
@@ -68,7 +68,7 @@ static void AttemptJoin(Player* _player)
         }
 
         // stop at success join
-        if (plr->GetGroup()->AddMember(_player->GetGUID(), _player->GetName()))
+        if (player->GetGroup()->AddMember(_player->GetGUID(), _player->GetName()))
         {
             if (sWorld->getConfig(CONFIG_RESTRICTED_LFG_CHANNEL) && _player->GetSession()->GetSecurity() == SEC_PLAYER)
                 _player->LeaveLFGChannel();
@@ -77,8 +77,8 @@ static void AttemptJoin(Player* _player)
         // full
         else
         {
-            if (sWorld->getConfig(CONFIG_RESTRICTED_LFG_CHANNEL) && plr->GetSession()->GetSecurity() == SEC_PLAYER)
-                plr->LeaveLFGChannel();
+            if (sWorld->getConfig(CONFIG_RESTRICTED_LFG_CHANNEL) && player->GetSession()->GetSecurity() == SEC_PLAYER)
+                player->LeaveLFGChannel();
         }
     }
 }
@@ -96,20 +96,20 @@ static void AttemptAddMore(Player* _player)
     HashMapHolder<Player>::MapType const& players = sObjectAccessor->GetPlayers();
     for (HashMapHolder<Player>::MapType::const_iterator iter = players.begin(); iter != players.end(); ++iter)
     {
-        Player *plr = iter->second;
+        Player* player = iter->second;
 
         // skip enemies and self
-        if (!plr || plr == _player || plr->GetTeam() != _player->GetTeam())
+        if (!player || player == _player || player->GetTeam() != _player->GetTeam())
             continue;
 
-        if (!plr->IsInWorld())
+        if (!player->IsInWorld())
             continue;
 
         // skip not auto join or in group
-        if (!plr->GetSession()->LookingForGroup_auto_join || plr->GetGroup())
+        if (!player->GetSession()->LookingForGroup_auto_join || player->GetGroup())
             continue;
 
-        if (!plr->m_lookingForGroup.HaveInSlot(_player->m_lookingForGroup.more))
+        if (!player->m_lookingForGroup.HaveInSlot(_player->m_lookingForGroup.more))
             continue;
 
         // attempt create group if need, or stop attempts
@@ -126,7 +126,7 @@ static void AttemptAddMore(Player* _player)
         }
 
         // stop at join fail (full)
-        if (!_player->GetGroup()->AddMember(plr->GetGUID(), plr->GetName()))
+        if (!_player->GetGroup()->AddMember(player->GetGUID(), player->GetName()))
         {
             if (sWorld->getConfig(CONFIG_RESTRICTED_LFG_CHANNEL) && _player->GetSession()->GetSecurity() == SEC_PLAYER)
                 _player->LeaveLFGChannel();
@@ -135,8 +135,8 @@ static void AttemptAddMore(Player* _player)
         }
 
         // joined
-        if (sWorld->getConfig(CONFIG_RESTRICTED_LFG_CHANNEL) && plr->GetSession()->GetSecurity() == SEC_PLAYER)
-            plr->LeaveLFGChannel();
+        if (sWorld->getConfig(CONFIG_RESTRICTED_LFG_CHANNEL) && player->GetSession()->GetSecurity() == SEC_PLAYER)
+            player->LeaveLFGChannel();
 
         // and group full
         if (_player->GetGroup()->IsFull())
@@ -271,38 +271,38 @@ void WorldSession::SendLfgResult(uint32 type, uint32 entry, uint8 lfg_type)
     HashMapHolder<Player>::MapType const& players = sObjectAccessor->GetPlayers();
     for (HashMapHolder<Player>::MapType::const_iterator iter = players.begin(); iter != players.end(); ++iter)
     {
-        Player *plr = iter->second;
+        Player* player = iter->second;
 
-        if (!plr || plr->GetTeam() != _player->GetTeam())
+        if (!player || player->GetTeam() != _player->GetTeam())
             continue;
 
-        if (!plr->IsInWorld())
+        if (!player->IsInWorld())
             continue;
 
-        if (!plr->m_lookingForGroup.HaveInSlot(entry, type))
+        if (!player->m_lookingForGroup.HaveInSlot(entry, type))
             continue;
 
         ++number;
 
-        data << plr->GetPackGUID();                         // packed guid
-        data << plr->getLevel();                            // level
-        data << plr->GetZoneId();                           // current zone
+        data << player->GetPackGUID();                         // packed guid
+        data << player->getLevel();                            // level
+        data << player->GetZoneId();                           // current zone
         data << lfg_type;                                   // 0x00 - LFG, 0x01 - LFM
 
         for (uint8 j = 0; j < MAX_LOOKING_FOR_GROUP_SLOT; ++j)
         {
-            data << uint32(plr->m_lookingForGroup.slots[j].entry | (plr->m_lookingForGroup.slots[j].type << 24));
+            data << uint32(player->m_lookingForGroup.slots[j].entry | (player->m_lookingForGroup.slots[j].type << 24));
         }
-        data << plr->m_lookingForGroup.comment;
+        data << player->m_lookingForGroup.comment;
 
-        Group *group = plr->GetGroup();
+        Group *group = player->GetGroup();
         if (group)
         {
             data << group->GetMembersCount()-1;             // count of group members without group leader
             for (GroupReference *itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
             {
                 Player *member = itr->getSource();
-                if (member && member->GetGUID() != plr->GetGUID())
+                if (member && member->GetGUID() != player->GetGUID())
                 {
                     data << member->GetPackGUID();          // packed guid
                     data << member->getLevel();             // player level

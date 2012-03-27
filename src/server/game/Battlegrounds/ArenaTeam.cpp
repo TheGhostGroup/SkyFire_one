@@ -23,14 +23,14 @@
 #include "ArenaTeam.h"
 #include "World.h"
 
-void ArenaTeamMember::ModifyPersonalRating(Player* plr, int32 mod, uint32 slot)
+void ArenaTeamMember::ModifyPersonalRating(Player* player, int32 mod, uint32 slot)
 {
     if (int32(personal_rating) + mod < 0)
         personal_rating = 0;
     else
         personal_rating += mod;
-    if (plr)
-        plr->SetArenaTeamInfoField(slot, ARENA_TEAM_PERSONAL_RATING, personal_rating);
+    if (player)
+        player->SetArenaTeamInfoField(slot, ARENA_TEAM_PERSONAL_RATING, personal_rating);
 }
 
 ArenaTeam::ArenaTeam()
@@ -401,9 +401,9 @@ void ArenaTeam::NotifyStatsChanged()
     // updates arena team stats for every member of the team (not only the ones who participated!)
     for (MemberList::const_iterator itr = m_members.begin(); itr != m_members.end(); ++itr)
     {
-        Player * plr = sObjectMgr->GetPlayer(itr->guid);
-        if (plr)
-            Stats(plr->GetSession());
+        Player* player = sObjectMgr->GetPlayer(itr->guid);
+        if (player)
+            Stats(player->GetSession());
     }
 }
 
@@ -628,25 +628,25 @@ int32 ArenaTeam::LostAgainst(uint32 againstRating)
     return mod;
 }
 
-void ArenaTeam::MemberLost(Player * plr, uint32 againstRating)
+void ArenaTeam::MemberLost(Player* player, uint32 againstRating)
 {
     // called for each participant of a match after losing
     for (MemberList::iterator itr = m_members.begin(); itr != m_members.end(); ++itr)
     {
-        if (itr->guid == plr->GetGUID())
+        if (itr->guid == player->GetGUID())
         {
             // update personal rating
             float chance = GetChanceAgainst(itr->personal_rating, againstRating);
             float K = (itr->personal_rating < 1000) ? 48.0f : 32.0f;
             // calculate the rating modification (ELO system with k=32 or k=48 if rating<1000)
             int32 mod = (int32)ceil(K * (0.0f - chance));
-            itr->ModifyPersonalRating(plr, mod, GetSlot());
+            itr->ModifyPersonalRating(player, mod, GetSlot());
             // update personal played stats
             itr->games_week +=1;
             itr->games_season +=1;
             // update the unit fields
-            plr->SetArenaTeamInfoField(GetSlot(), ARENA_TEAM_GAMES_WEEK,  itr->games_week);
-            plr->SetArenaTeamInfoField(GetSlot(), ARENA_TEAM_GAMES_SEASON,  itr->games_season);
+            player->SetArenaTeamInfoField(GetSlot(), ARENA_TEAM_GAMES_WEEK,  itr->games_week);
+            player->SetArenaTeamInfoField(GetSlot(), ARENA_TEAM_GAMES_SEASON,  itr->games_season);
             return;
         }
     }
@@ -676,27 +676,27 @@ void ArenaTeam::OfflineMemberLost(uint64 guid, uint32 againstRating)
     }
 }
 
-void ArenaTeam::MemberWon(Player * plr, uint32 againstRating)
+void ArenaTeam::MemberWon(Player* player, uint32 againstRating)
 {
     // called for each participant after winning a match
     for (MemberList::iterator itr = m_members.begin(); itr != m_members.end(); ++itr)
     {
-        if (itr->guid == plr->GetGUID())
+        if (itr->guid == player->GetGUID())
         {
             // update personal rating
             float chance = GetChanceAgainst(itr->personal_rating, againstRating);
             float K = (itr->personal_rating < 1000) ? 48.0f : 32.0f;
             // calculate the rating modification (ELO system with k=32 or k=48 if rating<1000)
             int32 mod = (int32)floor(K* (1.0f - chance));
-            itr->ModifyPersonalRating(plr, mod, GetSlot());
+            itr->ModifyPersonalRating(player, mod, GetSlot());
             // update personal stats
             itr->games_week +=1;
             itr->games_season +=1;
             itr->wins_season += 1;
             itr->wins_week += 1;
             // update unit fields
-            plr->SetArenaTeamInfoField(GetSlot(), ARENA_TEAM_GAMES_WEEK, itr->games_week);
-            plr->SetArenaTeamInfoField(GetSlot(), ARENA_TEAM_GAMES_SEASON, itr->games_season);
+            player->SetArenaTeamInfoField(GetSlot(), ARENA_TEAM_GAMES_WEEK, itr->games_week);
+            player->SetArenaTeamInfoField(GetSlot(), ARENA_TEAM_GAMES_SEASON, itr->games_season);
             return;
         }
     }

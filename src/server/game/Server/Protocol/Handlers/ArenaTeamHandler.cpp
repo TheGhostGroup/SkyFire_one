@@ -36,14 +36,14 @@ void WorldSession::HandleInspectArenaTeamsOpcode(WorldPacket & recv_data)
     recv_data >> guid;
     sLog->outDebug("Inspect Arena stats (GUID: %u TypeId: %u)", GUID_LOPART(guid), GuidHigh2TypeId(GUID_HIPART(guid)));
 
-    if (Player *plr = sObjectMgr->GetPlayer(guid))
+    if (Player* player = sObjectMgr->GetPlayer(guid))
     {
         for (uint8 i = 0; i < MAX_ARENA_SLOT; ++i)
         {
-            if (uint32 a_id = plr->GetArenaTeamId(i))
+            if (uint32 a_id = player->GetArenaTeamId(i))
             {
                 if (ArenaTeam *at = sObjectMgr->GetArenaTeamById(a_id))
-                    at->InspectStats(this, plr->GetGUID());
+                    at->InspectStats(this, player->GetGUID());
             }
         }
     }
@@ -81,7 +81,7 @@ void WorldSession::HandleArenaTeamInviteOpcode(WorldPacket & recv_data)
     uint32 ArenaTeamId;                                     // arena team id
     std::string Invitedname;
 
-    Player * player = NULL;
+    Player* player = NULL;
 
     recv_data >> ArenaTeamId >> Invitedname;
 

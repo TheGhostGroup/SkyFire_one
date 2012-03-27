@@ -431,22 +431,22 @@ void Transport::TeleportTransport(uint32 newMapid, float x, float y, float z)
         PlayerSet::iterator it2 = itr;
         ++itr;
 
-        Player *plr = *it2;
-        if (!plr)
+        Player* player = *it2;
+        if (!player)
         {
             m_passengers.erase(it2);
             continue;
         }
 
-        if (plr->isDead() && !plr->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_GHOST))
+        if (player->isDead() && !player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_GHOST))
         {
-            plr->ResurrectPlayer(1.0);
+            player->ResurrectPlayer(1.0);
         }
-        plr->TeleportTo(newMapid, x, y, z, GetOrientation(), TELE_TO_NOT_LEAVE_TRANSPORT);
+        player->TeleportTo(newMapid, x, y, z, GetOrientation(), TELE_TO_NOT_LEAVE_TRANSPORT);
 
         //WorldPacket data(SMSG_811, 4);
         //data << uint32(0);
-        //plr->GetSession()->SendPacket(&data);
+        //player->GetSession()->SendPacket(&data);
     }
 
     //we need to create and save new Map object with 'newMapid' because if not done -> lead to invalid Map object reference...

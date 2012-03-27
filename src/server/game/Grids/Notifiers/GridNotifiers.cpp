@@ -59,9 +59,9 @@ VisibleNotifier::SendToSelf()
 
         if (IS_PLAYER_GUID(*it))
         {
-            Player* plr = ObjectAccessor::FindPlayer(*it);
-            if (plr && plr->IsInWorld() && !plr->isNeedNotify(NOTIFY_VISIBILITY_CHANGED))
-                plr->UpdateVisibilityOf(&i_player);
+            Player* player = ObjectAccessor::FindPlayer(*it);
+            if (player && player->IsInWorld() && !player->isNeedNotify(NOTIFY_VISIBILITY_CHANGED))
+                player->UpdateVisibilityOf(&i_player);
         }
     }
 
@@ -129,16 +129,16 @@ void PlayerRelocationNotifier::Visit(PlayerMapType &m)
 {
     for (PlayerMapType::iterator iter=m.begin(); iter != m.end(); ++iter)
     {
-        Player* plr = iter->getSource();
+        Player* player = iter->getSource();
 
-        vis_guids.erase(plr->GetGUID());
+        vis_guids.erase(player->GetGUID());
 
-        i_player.UpdateVisibilityOf(plr, i_data, i_visibleNow);
+        i_player.UpdateVisibilityOf(player, i_data, i_visibleNow);
 
-        if (plr->m_seer->isNeedNotify(NOTIFY_VISIBILITY_CHANGED))
+        if (player->m_seer->isNeedNotify(NOTIFY_VISIBILITY_CHANGED))
             continue;
 
-        plr->UpdateVisibilityOf(&i_player);
+        player->UpdateVisibilityOf(&i_player);
     }
 }
 
@@ -209,7 +209,7 @@ void DelayedUnitRelocation::Visit(PlayerMapType &m)
 {
     for (PlayerMapType::iterator iter = m.begin(); iter != m.end(); ++iter)
     {
-        Player * player = iter->getSource();
+        Player* player = iter->getSource();
         WorldObject const *viewPoint = player->m_seer;
 
         if (!viewPoint->isNeedNotify(NOTIFY_VISIBILITY_CHANGED))
@@ -380,11 +380,11 @@ MessageDistDeliverer::Visit(DynamicObjectMapType &m)
 
 /*
 void
-MessageDistDeliverer::VisitObject(Player* plr)
+MessageDistDeliverer::VisitObject(Player* player)
 {
-    if (!i_ownTeamOnly || (i_source.GetTypeId() == TYPEID_PLAYER && plr->GetTeam() == ((Player&)i_source).GetTeam()))
+    if (!i_ownTeamOnly || (i_source.GetTypeId() == TYPEID_PLAYER && player->GetTeam() == ((Player&)i_source).GetTeam()))
     {
-        SendPacket(plr);
+        SendPacket(player);
     }
 }
 */

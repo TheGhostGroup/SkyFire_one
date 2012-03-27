@@ -74,7 +74,7 @@ void WorldSession::HandleGuildInviteOpcode(WorldPacket& recvPacket)
     //sLog->outDebug("WORLD: Received CMSG_GUILD_INVITE");
 
     std::string Invitedname, plname;
-    Player * player = NULL;
+    Player* player = NULL;
     recvPacket >> Invitedname;
 
     if (normalizePlayerName(Invitedname))

@@ -455,8 +455,8 @@ struct boss_headless_horsemanAI : public ScriptedAI
                 wp_reached = false;
                 me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 SaySound(SAY_ENTRANCE);
-                if (Unit *plr = Unit::GetUnit((*me),PlayerGUID))
-                    DoStartMovement(plr);
+                if (Unit *player = Unit::GetUnit((*me),PlayerGUID))
+                    DoStartMovement(player);
                 break;
             }
         }
@@ -475,9 +475,9 @@ struct boss_headless_horsemanAI : public ScriptedAI
         if (withhead && Phase != 0)
             ScriptedAI::MoveInLineOfSight(who);
     }
-    void KilledUnit(Unit *plr)
+    void KilledUnit(Unit *player)
     {
-        if (plr->GetTypeId() == TYPEID_PLAYER)
+        if (player->GetTypeId() == TYPEID_PLAYER)
         {
             if (withhead)
                 SaySound(SAY_PLAYER_DEATH);
@@ -610,19 +610,19 @@ struct boss_headless_horsemanAI : public ScriptedAI
                         if (say_timer <= diff)
                         {
                             say_timer = 3000;
-                            Player *plr = SelectRandomPlayer(100.0f, false);
+                            Player* player = SelectRandomPlayer(100.0f, false);
                             if (count < 3)
                             {
-                                if (plr)
-                                    plr->Say(Text[count],0);
+                                if (player)
+                                    player->Say(Text[count],0);
                             }
                             else
                             {
                                 DoCast(me, SPELL_RHYME_BIG);
-                                if (plr)
+                                if (player)
                                 {
-                                    plr->Say(Text[count],0);
-                                    plr->HandleEmoteCommand(ANIM_EMOTE_SHOUT);
+                                    player->Say(Text[count],0);
+                                    player->HandleEmoteCommand(ANIM_EMOTE_SHOUT);
                                 }
                                 wp_reached = true;
                                 IsFlying = true;
@@ -656,8 +656,8 @@ struct boss_headless_horsemanAI : public ScriptedAI
                 case 2:
                     if (conflagrate <= diff)
                     {
-                        if (Unit *plr = SelectRandomPlayer(30.0f))
-                            DoCast(plr, SPELL_CONFLAGRATION, false);
+                        if (Unit *player = SelectRandomPlayer(30.0f))
+                            DoCast(player, SPELL_CONFLAGRATION, false);
                         conflagrate = urand(10000, 16000);
                     } else conflagrate -= diff;
                     break;
@@ -827,12 +827,12 @@ bool GOHello_go_loosely_turned_soil(Player* player, GameObject* soil)
             return true;
         pInstance->SetData(DATA_HORSEMAN_EVENT, IN_PROGRESS);
     }
-/*  if (soil->GetGoType() == GAMEOBJECT_TYPE_QUESTGIVER && plr->getLevel() > 64)
+/*  if (soil->GetGoType() == GAMEOBJECT_TYPE_QUESTGIVER && player->getLevel() > 64)
     {
-        plr->PrepareQuestMenu(soil->GetGUID());
-        plr->SendPreparedQuest(soil->GetGUID());
+        player->PrepareQuestMenu(soil->GetGUID());
+        player->SendPreparedQuest(soil->GetGUID());
     }
-    if (plr->GetQuestStatus(11405) == QUEST_STATUS_INCOMPLETE && plr->getLevel() > 64)
+    if (player->GetQuestStatus(11405) == QUEST_STATUS_INCOMPLETE && player->getLevel() > 64)
     { */
         player->AreaExploredOrEventHappens(11405);
         if (Creature *horseman = soil->SummonCreature(HH_MOUNTED, FlightPoint[20].x, FlightPoint[20].y, FlightPoint[20].z, 0, TEMPSUMMON_MANUAL_DESPAWN, 0))

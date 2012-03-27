@@ -1417,7 +1417,7 @@ void GameEventMgr::SaveWorldEventStateToDB(uint16 event_id)
     CharacterDatabase.CommitTransaction();
 }
 
-void GameEventMgr::HandleWorldEventGossip(Player *plr, Creature *c)
+void GameEventMgr::HandleWorldEventGossip(Player* player, Creature *c)
 {
     // this function is used to send world state update before sending gossip menu
     // find the npc's gossip id (if set) in an active game event
@@ -1426,18 +1426,18 @@ void GameEventMgr::HandleWorldEventGossip(Player *plr, Creature *c)
     if (itr != mNPCGossipIds.end())
         if (IsActiveEvent(itr->second.first))
             // send world state updates to the player about the progress
-            SendWorldStateUpdate(plr, itr->second.first);
+            SendWorldStateUpdate(player, itr->second.first);
 }
 
-void GameEventMgr::SendWorldStateUpdate(Player * plr, uint16 event_id)
+void GameEventMgr::SendWorldStateUpdate(Player* player, uint16 event_id)
 {
     std::map<uint32, GameEventFinishCondition>::iterator itr;
     for (itr = mGameEvent[event_id].conditions.begin(); itr != mGameEvent[event_id].conditions.end(); ++itr)
     {
         if (itr->second.done_world_state)
-            plr->SendUpdateWorldState(itr->second.done_world_state, (uint32)(itr->second.done));
+            player->SendUpdateWorldState(itr->second.done_world_state, (uint32)(itr->second.done));
         if (itr->second.max_world_state)
-            plr->SendUpdateWorldState(itr->second.max_world_state, (uint32)(itr->second.reqNum));
+            player->SendUpdateWorldState(itr->second.max_world_state, (uint32)(itr->second.reqNum));
     }
 }
 

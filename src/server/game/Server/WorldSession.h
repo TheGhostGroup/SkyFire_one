@@ -92,7 +92,7 @@ class WorldSession
         char const* GetPlayerName() const;
         void SetSecurity(uint32 security) { _security = security; }
         std::string const& GetRemoteAddress() { return m_Address; }
-        void SetPlayer(Player *plr) { _player = plr; }
+        void SetPlayer(Player* player) { _player = player; }
         uint8 Expansion() const { return m_expansion; }
 
         // Session in auth.queue currently

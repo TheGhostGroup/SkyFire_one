@@ -107,8 +107,8 @@ struct instance_shadow_labyrinth : public ScriptedInstance
         {
             for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
             {
-                if (Player* plr = itr->getSource())
-                    return plr;
+                if (Player* player = itr->getSource())
+                    return player;
             }
         }
 

@@ -108,7 +108,7 @@ public: /* Initialization */
         void OnLogin(Player* player);
         void OnLogout(Player* player);
         void OnPVPKill(Player* killer, Player *killed);
-        bool GossipHello (Player * player, Creature* creature);
+        bool GossipHello (Player* player, Creature* creature);
         bool GossipSelect(Player* player, Creature* creature, uint32 uiSender, uint32 uiAction);
         bool GossipSelectWithCode(Player* player, Creature* creature, uint32 uiSender, uint32 uiAction, const char* sCode);
         bool GOSelect(Player* player, GameObject* pGO, uint32 uiSender, uint32 uiAction);

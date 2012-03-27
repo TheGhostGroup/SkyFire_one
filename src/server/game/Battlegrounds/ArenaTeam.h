@@ -101,7 +101,7 @@ struct ArenaTeamMember
     uint32 wins_season;
     uint32 personal_rating;
 
-    void ModifyPersonalRating(Player* plr, int32 mod, uint32 slot);
+    void ModifyPersonalRating(Player* player, int32 mod, uint32 slot);
 };
 
 struct ArenaTeamStats
@@ -195,9 +195,9 @@ class ArenaTeam
         uint32 GetPoints(uint32 MemberRating);
         float GetChanceAgainst(uint32 own_rating, uint32 enemy_rating);
         int32 WonAgainst(uint32 againstRating);
-        void MemberWon(Player * plr, uint32 againstRating);
+        void MemberWon(Player* player, uint32 againstRating);
         int32 LostAgainst(uint32 againstRating);
-        void MemberLost(Player * plr, uint32 againstRating);
+        void MemberLost(Player* player, uint32 againstRating);
         void OfflineMemberLost(uint64 guid, uint32 againstRating);
 
         void UpdateArenaPointsHelper(std::map<uint32, uint32> & PlayerPoints);

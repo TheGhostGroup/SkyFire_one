@@ -245,7 +245,7 @@ char const* ScriptMgr::ScriptsVersion()
     return "Integrated Trinity Scripts";
 }
 
-bool ScriptMgr::GossipHello (Player * player, Creature* creature)
+bool ScriptMgr::GossipHello (Player* player, Creature* creature)
 {
     Script *tmpscript = m_scripts[creature->GetScriptId()];
     if (!tmpscript || !tmpscript->pGossipHello) return false;
