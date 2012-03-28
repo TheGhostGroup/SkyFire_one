@@ -1649,10 +1649,10 @@ enum CreatureEliteType
     CREATURE_UNKNOWN               = 5                      // found in 2.2.3 for 2 mobs
 };
 
-// values based at Holidays.dbc // these need checked for TBC
+ // these need checked for TBC
 enum HolidayIds
 {
-    /*HOLIDAY_NONE                     = 0,
+    HOLIDAY_NONE                     = 0,
 
     HOLIDAY_FIREWORKS_SPECTACULAR    = 62,
     HOLIDAY_FEAST_OF_WINTER_VEIL     = 141,
@@ -1674,7 +1674,7 @@ enum HolidayIds
     HOLIDAY_DARKMOON_FAIRE_SHATTRATH = 376,
     HOLIDAY_PIRATES_DAY              = 398,
     HOLIDAY_PILGRIMS_BOUNTY          = 404,
-    HOLIDAY_DAY_OF_DEAD              = 409*/
+    HOLIDAY_DAY_OF_DEAD              = 409
 };
 
 // values based at QuestInfo.dbc

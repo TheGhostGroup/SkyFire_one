@@ -29,6 +29,7 @@
 #include "Formulas.h"
 #include "ObjectAccessor.h"
 #include "Battleground.h"
+#include "BattlegroundMgr.h"
 #include "MapManager.h"
 #include "InstanceSaveMgr.h"
 #include "MapInstanced.h"
@@ -1379,22 +1380,32 @@ void Group::UpdateLooterGuid(WorldObject* object, bool ifneed)
     SendUpdate();
 }
 
-uint32 Group::CanJoinBattlegroundQueue(uint32 bgTypeId, uint32 bgQueueType, uint32 MinPlayerCount, uint32 MaxPlayerCount, bool isRated, uint32 arenaSlot)
+GroupJoinBattlegroundResult Group::CanJoinBattlegroundQueue(Battleground const* bgOrTemplate, BattlegroundQueueTypeId bgQueueTypeId, uint32 MinPlayerCount, uint32 /*MaxPlayerCount*/, bool isRated, uint32 arenaSlot)
 {
+    BattlemasterListEntry const* bgEntry = sBattlemasterListStore.LookupEntry(bgOrTemplate->GetTypeID());
+    if (!bgEntry)
+        return ERR_GROUP_JOIN_BATTLEGROUND_FAIL;            // shouldn't happen
+
     // check for min / max count
     uint32 memberscount = GetMembersCount();
-    if (memberscount < MinPlayerCount)
-        return BG_JOIN_ERR_GROUP_NOT_ENOUGH;
-    if (memberscount > MaxPlayerCount)
-        return BG_JOIN_ERR_GROUP_TOO_MANY;
+
+    // only check for MinPlayerCount since MinPlayerCount == MaxPlayerCount for arenas...
+    if (bgOrTemplate->isArena() && memberscount != MinPlayerCount)
+        return ERR_ARENA_TEAM_PARTY_SIZE;
+
+    if (memberscount > bgEntry->maxGroupSize)                // no MinPlayerCount for battlegrounds
+        return ERR_BATTLEGROUND_NONE;                        // ERR_GROUP_JOIN_BATTLEGROUND_TOO_MANY handled on client side
 
     // get a player as reference, to compare other players' stats to (arena team id, queue id based on level, etc.)
     Player * reference = GetFirstMember()->getSource();
     // no reference found, can't join this way
     if (!reference)
-        return BG_JOIN_ERR_OFFLINE_MEMBER;
+        return ERR_BATTLEGROUND_JOIN_FAILED;
 
-    uint32 bgQueueId = reference->GetBattlegroundQueueIdFromLevel();
+    PvPDifficultyEntry const* bracketEntry = GetBattlegroundBracketByLevel(bgOrTemplate->GetMapId(),reference->getLevel());
+    if (!bracketEntry)
+        return ERR_BATTLEGROUND_JOIN_FAILED;
+
     uint32 arenaTeamId = reference->GetArenaTeamId(arenaSlot);
     uint32 team = reference->GetTeam();
 
@@ -1404,27 +1415,34 @@ uint32 Group::CanJoinBattlegroundQueue(uint32 bgTypeId, uint32 bgQueueType, uint
         Player *member = itr->getSource();
         // offline member? don't let join
         if (!member)
-            return BG_JOIN_ERR_OFFLINE_MEMBER;
+            return ERR_BATTLEGROUND_JOIN_FAILED;
         // don't allow cross-faction join as group
         if (member->GetTeam() != team)
-            return BG_JOIN_ERR_MIXED_FACTION;
+            return ERR_BATTLEGROUND_JOIN_TIMED_OUT;
         // not in the same battleground level braket, don't let join
-        if (member->GetBattlegroundQueueIdFromLevel() != bgQueueId)
-            return BG_JOIN_ERR_MIXED_LEVELS;
+        PvPDifficultyEntry const* memberBracketEntry = GetBattlegroundBracketByLevel(bracketEntry->mapId,member->getLevel());
+        if (memberBracketEntry != bracketEntry)
+            return ERR_BATTLEGROUND_JOIN_RANGE_INDEX;
         // don't let join rated matches if the arena team id doesn't match
         if (isRated && member->GetArenaTeamId(arenaSlot) != arenaTeamId)
-            return BG_JOIN_ERR_MIXED_ARENATEAM;
+            return ERR_BATTLEGROUND_JOIN_FAILED;
         // don't let join if someone from the group is already in that bg queue
-        if (member->InBattlegroundQueueForBattlegroundQueueType(bgQueueType))
-            return BG_JOIN_ERR_GROUP_MEMBER_ALREADY_IN_QUEUE;
+        if (member->InBattlegroundQueueForBattlegroundQueueType(bgQueueTypeId))
+            return ERR_BATTLEGROUND_JOIN_FAILED;            // not blizz-like
+        // don't let join if someone from the group is in bg queue random
+        if (member->InBattlegroundQueueForBattlegroundQueueType(bgQueueTypeIdRandom))
+            return ERR_IN_RANDOM_BG;
+        // don't let join to bg queue random if someone from the group is already in bg queue
+        if (bgOrTemplate->GetTypeID() == BATTLEGROUND_RB && member->InBattlegroundQueue())
+            return ERR_IN_NON_RANDOM_BG;
         // check for deserter debuff in case not arena queue
-        if (bgTypeId != BATTLEGROUND_AA && !member->CanJoinToBattleground())
-            return BG_JOIN_ERR_GROUP_DESERTER;
+        if (bgOrTemplate->GetTypeID() != BATTLEGROUND_AA && !member->CanJoinToBattleground())
+            return ERR_GROUP_JOIN_BATTLEGROUND_DESERTERS;
         // check if member can join any more battleground queues
         if (!member->HasFreeBattlegroundQueueId())
-            return BG_JOIN_ERR_ALL_QUEUES_USED;
+            return ERR_BATTLEGROUND_TOO_MANY_QUEUES;        // not blizz-like
     }
-    return BG_JOIN_ERR_OK;
+    return GroupJoinBattlegroundResult(bgOrTemplate->GetTypeID());
 }
 
 //===================================================
