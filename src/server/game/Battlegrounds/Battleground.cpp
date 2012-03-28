@@ -21,7 +21,6 @@
 #include "ObjectMgr.h"
 #include "World.h"
 #include "WorldPacket.h"
-
 #include "ArenaTeam.h"
 #include "Battleground.h"
 #include "BattlegroundMgr.h"
@@ -29,6 +28,7 @@
 #include "Formulas.h"
 #include "GridNotifiersImpl.h"
 #include "Group.h"
+#include "Unit.h"
 #include "Language.h"
 #include "MapManager.h"
 #include "Object.h"
@@ -214,7 +214,7 @@ Battleground::~Battleground()
     for (int i = 0; i < size; ++i)
         DelObject(i);
 
-    if (GetInstanceID())                                    // not spam by useless queries in case BG templates
+    if (GetInstanceID())       // not spam by useless queries in case BG templates
     {
         // delete creature and go respawn times
         WorldDatabase.PExecute("DELETE FROM creature_respawn WHERE instance = '%u'", GetInstanceID());
@@ -321,7 +321,7 @@ void Battleground::Update(uint32 diff)
             player->ResurrectPlayer(1.0f);
             player->CastSpell(player, 6962, true);
             player->CastSpell(player, SPELL_SPIRIT_HEAL_MANA, true);
-            sObjectAccessor.ConvertCorpseForPlayer(*itr);
+            sObjectAccessor->ConvertCorpseForPlayer(*itr);
         }
         m_ResurrectQueue.clear();
     }
@@ -395,19 +395,19 @@ void Battleground::Update(uint32 diff)
             //first start warning - 2 or 1 minute
             SendMessageToAll(m_StartMessageIds[BG_STARTING_EVENT_FIRST], CHAT_MSG_BG_SYSTEM_NEUTRAL);
         }
-        // After 1 minute or 30 seconds, warning is signalled
+        // After 1 minute or 30 seconds, warning is signaled
         else if (GetStartDelayTime() <= m_StartDelayTimes[BG_STARTING_EVENT_SECOND] && !(m_Events & BG_STARTING_EVENT_2))
         {
             m_Events |= BG_STARTING_EVENT_2;
             SendMessageToAll(m_StartMessageIds[BG_STARTING_EVENT_SECOND], CHAT_MSG_BG_SYSTEM_NEUTRAL);
         }
-        // After 30 or 15 seconds, warning is signalled
+        // After 30 or 15 seconds, warning is signaled
         else if (GetStartDelayTime() <= m_StartDelayTimes[BG_STARTING_EVENT_THIRD] && !(m_Events & BG_STARTING_EVENT_3))
         {
             m_Events |= BG_STARTING_EVENT_3;
             SendMessageToAll(m_StartMessageIds[BG_STARTING_EVENT_THIRD], CHAT_MSG_BG_SYSTEM_NEUTRAL);
         }
-        // delay expired (atfer 2 or 1 minute)
+        // delay expired (after 2 or 1 minute)
         else if (GetStartDelayTime() <= 0 && !(m_Events & BG_STARTING_EVENT_4))
         {
             m_Events |= BG_STARTING_EVENT_4;
@@ -421,28 +421,9 @@ void Battleground::Update(uint32 diff)
             //remove preparation
             if (isArena())
             {
-                //TODO : add arena sound PlaySoundToAll(SOUND_ARENA_START);
-
                 for (BattlegroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
                     if (Player* player = sObjectMgr->GetPlayer(itr->first))
-                    {
                         player->RemoveAurasDueToSpell(SPELL_ARENA_PREPARATION);
-                        // remove auras with duration lower than 30s
-                        Unit::AuraApplicationMap & auraMap = player->GetAppliedAuras();
-                        for (Unit::AuraApplicationMap::iterator iter = auraMap.begin(); iter != auraMap.end();)
-                        {
-                            AuraApplication * aurApp = iter->second;
-                            Aura * aura = aurApp->GetBase();
-                            if (!aura->IsPermanent()
-                                && aura->GetDuration() <= 30*IN_MILLISECONDS
-                                && aurApp->IsPositive()
-                                && (!(aura->GetSpellProto()->Attributes & SPELL_ATTR_UNAFFECTED_BY_INVULNERABILITY))
-                                && (!aura->HasEffectType(SPELL_AURA_MOD_INVISIBILITY)))
-                                player->RemoveAura(iter);
-                            else
-                                ++iter;
-                        }
-                    }
 
                 CheckArenaWinConditions();
             }
@@ -453,11 +434,9 @@ void Battleground::Update(uint32 diff)
                 for (BattlegroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
                     if (Player* player = sObjectMgr->GetPlayer(itr->first))
                         player->RemoveAurasDueToSpell(SPELL_PREPARATION);
+
                 //Announce BG starting
-                if (sWorld->getConfig(CONFIG_BATTLEGROUND_QUEUE_ANNOUNCER_ENABLE))
-                {
-                    sWorld->SendWorldText(LANG_BG_STARTED_ANNOUNCE_WORLD, GetName(), GetMinLevel(), GetMaxLevel());
-                }
+                Announce();
             }
         }
     }
@@ -653,7 +632,7 @@ void Battleground::RewardReputationToTeam(uint32 faction_id, uint32 Reputation, 
         if (!team) team = player->GetTeam();
 
         if (team == TeamID)
-            player->GetReputationMgr().ModifyReputation(factionEntry, Reputation);
+            player->ModifyFactionReputation(factionEntry, Reputation);
     }
 }
 
@@ -718,7 +697,7 @@ void Battleground::EndBattleground(uint32 winner)
             winner_rating = winner_arena_team->GetStats().rating;
             int32 winner_change = winner_arena_team->WonAgainst(loser_rating);
             int32 loser_change = loser_arena_team->LostAgainst(winner_rating);
-            sLog->outDebug("--- Winner rating: %u, Loser rating: %u, Winner change: %u, Losser change: %u ---", winner_rating, loser_rating, winner_change, loser_change);
+            sLog->outDebug("--- Winner rating: %u, Loser rating: %u, Winner change: %u, Loser change: %u ---", winner_rating, loser_rating, winner_change, loser_change);
             SetArenaTeamRatingChangeForTeam(winner, winner_change);
             SetArenaTeamRatingChangeForTeam(GetOtherTeam(winner), loser_change);
             sLog->outArena("Arena match Type: %u for Team1Id: %u - Team2Id: %u ended. WinnerTeamId: %u. RatingChange: %i.", m_ArenaType, m_ArenaTeamIds[BG_TEAM_ALLIANCE], m_ArenaTeamIds[BG_TEAM_HORDE], winner_arena_team->GetId(), winner_change);
@@ -755,7 +734,7 @@ void Battleground::EndBattleground(uint32 winner)
 
         // should remove spirit of redemption
         if (player->HasAuraType(SPELL_AURA_SPIRIT_OF_REDEMPTION))
-            player->RemoveAurasByType(SPELL_AURA_MOD_SHAPESHIFT);
+            player->RemoveSpellsCausingAura(SPELL_AURA_MOD_SHAPESHIFT);
 
         if (!player->isAlive())
         {
@@ -793,8 +772,8 @@ void Battleground::EndBattleground(uint32 winner)
             }
         }
 
-        uint32 win_kills = player->GetRandomWinner() ? BG_REWARD_WINNER_HONOR_LAST : BG_REWARD_WINNER_HONOR_FIRST;
-        uint32 loos_kills = player->GetRandomWinner() ? BG_REWARD_LOOSER_HONOR_LAST : BG_REWARD_LOOSER_HONOR_FIRST;
+        uint32 winning_kills = player->GetRandomWinner() ? BG_REWARD_WINNER_HONOR_LAST : BG_REWARD_WINNER_HONOR_FIRST;
+        uint32 losing_kills = player->GetRandomWinner() ? BG_REWARD_LOOSER_HONOR_LAST : BG_REWARD_LOOSER_HONOR_FIRST;
         uint32 win_arena = player->GetRandomWinner() ? BG_REWARD_WINNER_ARENA_LAST : BG_REWARD_WINNER_ARENA_FIRST;
 
         // Reward winner team
@@ -802,7 +781,7 @@ void Battleground::EndBattleground(uint32 winner)
         {
             if (IsRandom() || BattlegroundMgr::IsBGWeekend(GetTypeID()))
             {
-                UpdatePlayerScore(player, SCORE_BONUS_HONOR, GetBonusHonorFromKill(win_kills));
+                UpdatePlayerScore(player, SCORE_BONUS_HONOR, GetBonusHonorFromKill(winning_kills));
                 if (CanAwardArenaPoints())
                     player->ModifyArenaPoints(win_arena);
                 if (!player->GetRandomWinner())
@@ -812,7 +791,7 @@ void Battleground::EndBattleground(uint32 winner)
         else
         {
             if (IsRandom() || BattlegroundMgr::IsBGWeekend(GetTypeID()))
-                UpdatePlayerScore(player, SCORE_BONUS_HONOR, GetBonusHonorFromKill(loos_kills));
+                UpdatePlayerScore(player, SCORE_BONUS_HONOR, GetBonusHonorFromKill(losing_kills));
         }
 
         player->SetHealth(player->GetMaxHealth());
@@ -903,8 +882,8 @@ void Battleground::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
     }
 
     // should remove spirit of redemption
-    if (player && player->HasAuraType(SPELL_AURA_SPIRIT_OF_REDEMPTION))
-        player->RemoveAurasByType(SPELL_AURA_MOD_SHAPESHIFT);
+  if (player->HasAuraType(SPELL_AURA_SPIRIT_OF_REDEMPTION))
+      player->RemoveSpellsCausingAura(SPELL_AURA_MOD_SHAPESHIFT);
 
     if (player && !player->isAlive())                              // resurrect on exit
     {
@@ -932,7 +911,7 @@ void Battleground::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
 
                 // unsummon current and summon old pet if there was one and there isn't a current pet
                 player->RemovePet(NULL, PET_SAVE_NOT_IN_SLOT);
-                player->ResummonPetTemporaryUnSummonedIfAny();
+                player->SetTemporaryUnsummonedPetNumber(0);
 
                 if (isRated() && GetStatus() == STATUS_IN_PROGRESS)
                 {
@@ -1079,14 +1058,14 @@ void Battleground::AddPlayer(Player* player)
     sBattlegroundMgr->BuildBattlegroundStatusPacket(&status, this, queueSlot, STATUS_IN_PROGRESS, 0, GetStartTime(), GetArenaType());
     player->GetSession()->SendPacket(&status);
 
-    player->RemoveAurasByType(SPELL_AURA_MOUNTED);
+    player->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
 
     // add arena specific auras
     if (isArena())
     {
         player->RemoveArenaSpellCooldowns();
         player->RemoveArenaAuras();
-        player->RemoveArenaEnchantments(TEMP_ENCHANTMENT_SLOT);
+        player->RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT, true);
         if (team == ALLIANCE)                                // gold
         {
             if (player->GetTeam() == HORDE)
@@ -1103,7 +1082,7 @@ void Battleground::AddPlayer(Player* player)
         }
 
         player->DestroyConjuredItems(true);
-        player->UnsummonPetTemporaryIfAny();
+        player->SetTemporaryUnsummonedPetNumber(0);
 
         if (GetStatus() == STATUS_WAIT_JOIN)                 // not started yet
         {
@@ -1636,7 +1615,7 @@ void Battleground::PSendMessageToAll(int32 entry, ChatMsg type, Player const* so
 
 void Battleground::SendWarningToAll(int32 entry, ...)
 {
-    const char *format = sObjectMgr->GetTrinityStringForDBCLocale(entry);
+    const char *format = sObjectMgr->GetSkyFireStringForDBCLocale(entry);
     va_list ap;
     char str [1024];
     va_start(ap, entry);
@@ -1680,7 +1659,7 @@ void Battleground::EndNow()
 const char *Battleground::GetSkyFireString(int32 entry)
 {
     // FIXME: now we have different DBC locales and need localized message for each target client
-    return sObjectMgr->GetTrinityStringForDBCLocale(entry);
+    return sObjectMgr->GetSkyFireStringForDBCLocale(entry);
 }
 
 /*
@@ -1931,9 +1910,9 @@ void Battleground::RewardXPAtKill(Player* player, Player* victim)
                     uint32 itr_xp = (member_with_max_level == not_gray_member_with_max_level) ? uint32(xp*rate) : uint32((xp*rate/2)+1);
 
                     // handle SPELL_AURA_MOD_XP_PCT auras
-                    Unit::AuraEffectList const& ModXPPctAuras = player->GetAuraEffectsByType(SPELL_AURA_MOD_XP_PCT);
-                    for (Unit::AuraEffectList::const_iterator i = ModXPPctAuras.begin(); i != ModXPPctAuras.end(); ++i)
-                        itr_xp = uint32(itr_xp*(1.0f + (*i)->GetAmount() / 100.0f));
+                    Unit::AuraList const& ModXPPctAuras = GetAurasByType(SPELL_AURA_MOD_XP_PCT);
+                    for (Unit::AuraList::const_iterator i = ModXPPctAuras.begin();i != ModXPPctAuras.end(); ++i)
+                        xp = uint32(xp*(1.0f + (*i)->GetModifierValue() / 100.0f));
 
                     pGroupGuy->GiveXP(itr_xp, victim);
                     if (Pet* pet = pGroupGuy->GetPet())
@@ -1950,9 +1929,9 @@ void Battleground::RewardXPAtKill(Player* player, Player* victim)
             return;
 
         // handle SPELL_AURA_MOD_XP_PCT auras
-        Unit::AuraEffectList const& ModXPPctAuras = player->GetAuraEffectsByType(SPELL_AURA_MOD_XP_PCT);
-        for (Unit::AuraEffectList::const_iterator i = ModXPPctAuras.begin(); i != ModXPPctAuras.end(); ++i)
-            xp = uint32(xp*(1.0f + (*i)->GetAmount() / 100.0f));
+        Unit::AuraList const& ModXPPctAuras = GetAurasByType(SPELL_AURA_MOD_XP_PCT);
+        for (Unit::AuraList::const_iterator i = ModXPPctAuras.begin();i != ModXPPctAuras.end(); ++i)
+            xp = uint32(xp*(1.0f + (*i)->GetModifierValue() / 100.0f));
 
         player->GiveXP(xp, victim);
 

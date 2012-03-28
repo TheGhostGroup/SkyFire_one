@@ -349,6 +349,7 @@ class Battleground
         /* Battleground */
         // Get methods:
         char const* GetName() const         { return m_Name; }
+        BattlegroundTypeId GetTypeID(bool GetRandom = false) const { return GetRandom ? m_RandomTypeID : m_TypeID; }
         BattlegroundBracketId GetBracketId() const { return m_BracketId; }
         uint32 GetInstanceID() const        { return m_InstanceID; }
         BattlegroundStatus GetStatus() const { return m_Status; }
@@ -371,10 +372,12 @@ class Battleground
         uint32 GetScriptId() const          { return ScriptId; }
         uint32 GetBattlemasterEntry() const;
         uint32 GetBonusHonorFromKill(uint32 kills) const;
+        bool IsRandom() { return m_IsRandom; }
 
         // Set methods:
         void SetName(char const* Name)      { m_Name = Name; }
         void SetTypeID(BattlegroundTypeId TypeID) { m_TypeID = TypeID; }
+        void SetRandomTypeID(BattlegroundTypeId TypeID) { m_RandomTypeID = TypeID; }
         //here we can count minlevel and maxlevel for players
         void SetBracket(PvPDifficultyEntry const* bracketEntry);
         void SetInstanceID(uint32 InstanceID) { m_InstanceID = InstanceID; }
@@ -404,6 +407,7 @@ class Battleground
         void DecreaseInvitedCount(uint32 team)      { (team == ALLIANCE) ? --m_InvitedAlliance : --m_InvitedHorde; }
         void IncreaseInvitedCount(uint32 team)      { (team == ALLIANCE) ? ++m_InvitedAlliance : ++m_InvitedHorde; }
 
+        void SetRandom(bool isRandom) { m_IsRandom = isRandom; }
         uint32 GetInvitedCount(uint32 team) const
         {
             if (team == ALLIANCE)
@@ -567,8 +571,10 @@ class Battleground
 
         void SetDeleteThis() {m_SetDeleteThis = true;}
 
-        /* virtual score-array - get's used in bg-subclasses */
+        /* virtual score-array - gets used in bg-subclasses */
         int32 m_TeamScores[BG_TEAMS_COUNT];
+
+        void Announce();
 
         void RewardXPAtKill(Player* player, Player* victim);
         bool CanAwardArenaPoints() const { return m_LevelMin >= BG_AWARD_ARENA_POINTS_MIN_LEVEL; }

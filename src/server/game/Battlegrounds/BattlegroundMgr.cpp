@@ -285,40 +285,6 @@ void BattlegroundMgr::BuildPvpLogDataPacket(WorldPacket *data, Battleground *bg)
         *data << (int32)itr->second->HealingDone;            // healing done
         switch (bg->GetTypeID(true))                              // battleground specific things
         {
-            case BATTLEGROUND_RB:
-                switch (bg->GetMapId())
-                {
-                    case 489:
-                        *data << (uint32)0x00000002;        // count of next fields
-                        *data << (uint32)((BattlegroundWGScore*)itr->second)->FlagCaptures;         // flag captures
-                        *data << (uint32)((BattlegroundWGScore*)itr->second)->FlagReturns;          // flag returns
-                        break;
-                    case 566:
-                        *data << (uint32)0x00000001;        // count of next fields
-                        *data << (uint32)((BattlegroundEYScore*)itr->second)->FlagCaptures;         // flag captures
-                        break;
-                    case 529:
-                        *data << (uint32)0x00000002;        // count of next fields
-                        *data << (uint32)((BattlegroundABScore*)itr->second)->BasesAssaulted;       // bases asssulted
-                        *data << (uint32)((BattlegroundABScore*)itr->second)->BasesDefended;        // bases defended
-                        break;
-                    case 30:
-                        *data << (uint32)0x00000005;        // count of next fields
-                        *data << (uint32)((BattlegroundAVScore*)itr->second)->GraveyardsAssaulted;  // GraveyardsAssaulted
-                        *data << (uint32)((BattlegroundAVScore*)itr->second)->GraveyardsDefended;   // GraveyardsDefended
-                        *data << (uint32)((BattlegroundAVScore*)itr->second)->TowersAssaulted;      // TowersAssaulted
-                        *data << (uint32)((BattlegroundAVScore*)itr->second)->TowersDefended;       // TowersDefended
-                        *data << (uint32)((BattlegroundAVScore*)itr->second)->MinesCaptured;        // MinesCaptured
-                        break;
-                    case 607:
-                        *data << uint32(2);
-                        *data << uint32(((BattlegroundSAScore*)itr->second)->demolishers_destroyed);
-                        *data << uint32(((BattlegroundSAScore*)itr->second)->gates_destroyed);
-                        break;
-                    default:
-                        *data << (int32)0;                  // 0
-                        break;
-                }
             case BATTLEGROUND_AV:
                 *data << (uint32)0x00000005;                // count of next fields
                 *data << (uint32)((BattlegroundAVScore*)itr->second)->GraveyardsAssaulted;  // GraveyardsAssaulted
@@ -345,16 +311,6 @@ void BattlegroundMgr::BuildPvpLogDataPacket(WorldPacket *data, Battleground *bg)
             case BATTLEGROUND_BE:
             case BATTLEGROUND_AA:
             case BATTLEGROUND_RL:
-            case BATTLEGROUND_SA:
-                *data << uint32(2);
-                *data << uint32(((BattlegroundSAScore*)itr->second)->demolishers_destroyed);
-                *data << uint32(((BattlegroundSAScore*)itr->second)->gates_destroyed);
-                break;
-            case BATTLEGROUND_DS:                           // wotlk
-            case BATTLEGROUND_RV:                           // wotlk
-            case BATTLEGROUND_IC:                           // wotlk
-                *data << (int32)0;                          // 0
-                break;
             default:
                 sLog->outDebug("Unhandled MSG_PVP_LOG_DATA for BG id %u", bg->GetTypeID());
                 *data << (int32)0;
@@ -547,31 +503,16 @@ Battleground * BattlegroundMgr::CreateNewBattleground(BattlegroundTypeId bgTypeI
         case BATTLEGROUND_RL:
             bg = new BattlegroundRL(*(BattlegroundRL*)bg_template);
             break;
-        case BATTLEGROUND_SA:
-            bg = new BattlegroundSA(*(BattlegroundSA*)bg_template);
-            break;
-        case BATTLEGROUND_DS:
-            bg = new BattlegroundDS(*(BattlegroundDS*)bg_template);
-            break;
-        case BATTLEGROUND_RV:
-            bg = new BattlegroundRV(*(BattlegroundRV*)bg_template);
-            break;
-        case BATTLEGROUND_IC:
-            bg = new BattlegroundIC(*(BattlegroundIC*)bg_template);
-            break;
-        case BATTLEGROUND_RB:
-            bg = new BattlegroundRB(*(BattlegroundRB*)bg_template);
-            break;
         default:
             //error, but it is handled few lines above
             return 0;
     }
 
-    // set battelground difficulty before initialization
+    // set battleground difficulty before initialization
     bg->SetBracket(bracketEntry);
 
     // generate a new instance id
-    bg->SetInstanceID(sMapMgr.GenerateInstanceId()); // set instance id
+    bg->SetInstanceID(sMapMgr->GenerateInstanceId()); // set instance id
     bg->SetClientInstanceID(CreateClientVisibleInstanceId(isRandom ? BATTLEGROUND_RB : bgTypeId, bracketEntry->GetBracketId()));
 
     // reset the new bg (set status to status_wait_queue from status_none)
@@ -603,11 +544,6 @@ uint32 BattlegroundMgr::CreateBattleground(BattlegroundTypeId bgTypeId, bool IsA
         case BATTLEGROUND_AA: bg = new BattlegroundAA; break;
         case BATTLEGROUND_EY: bg = new BattlegroundEY; break;
         case BATTLEGROUND_RL: bg = new BattlegroundRL; break;
-        case BATTLEGROUND_SA: bg = new BattlegroundSA; break;
-        case BATTLEGROUND_DS: bg = new BattlegroundDS; break;
-        case BATTLEGROUND_RV: bg = new BattlegroundRV; break;
-        case BATTLEGROUND_IC: bg = new BattlegroundIC; break;
-        case BATTLEGROUND_RB: bg = new BattlegroundRB; break;
         default:
             bg = new Battleground;
             break;
@@ -652,25 +588,16 @@ void BattlegroundMgr::CreateInitialBattlegrounds()
 
     if (!result)
     {
-        barGoLink bar(1);
-
-        bar.step();
-
         sLog->outString();
         sLog->outErrorDb(">> Loaded 0 battlegrounds. DB table `battleground_template` is empty.");
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
-
     do
     {
         Field *fields = result->Fetch();
-        bar.step();
 
         uint32 bgTypeID_ = fields[0].GetUInt32();
-        if (sDisableMgr.IsDisabledFor(DISABLE_TYPE_BATTLEGROUND, bgTypeID_, NULL))
-            continue;
 
         // can be overwrite by values from DB
         bl = sBattlemasterListStore.LookupEntry(bgTypeID_);
@@ -696,8 +623,8 @@ void BattlegroundMgr::CreateInitialBattlegrounds()
         if (MinLvl == 0 || MaxLvl == 0 || MinLvl > MaxLvl)
         {
             //TO-DO: FIX ME
-            MinLvl = 0;//bl->minlvl;
-            MaxLvl = 80;//bl->maxlvl;
+            MinLvl = 0;  // bl->minlvl;
+            MaxLvl = 70; // bl->maxlvl;
         }
 
         start1 = fields[5].GetUInt32();
@@ -710,7 +637,7 @@ void BattlegroundMgr::CreateInitialBattlegrounds()
             AStartLoc[2] = start->z;
             AStartLoc[3] = fields[6].GetFloat();
         }
-        else if (bgTypeID == BATTLEGROUND_AA || bgTypeID == BATTLEGROUND_RB)
+        else if (bgTypeID == BATTLEGROUND_AA)
         {
             AStartLoc[0] = 0;
             AStartLoc[1] = 0;
@@ -733,7 +660,7 @@ void BattlegroundMgr::CreateInitialBattlegrounds()
             HStartLoc[2] = start->z;
             HStartLoc[3] = fields[8].GetFloat();
         }
-        else if (bgTypeID == BATTLEGROUND_AA || bgTypeID == BATTLEGROUND_RB)
+        else if (bgTypeID == BATTLEGROUND_AA)
         {
             HStartLoc[0] = 0;
             HStartLoc[1] = 0;
@@ -757,9 +684,6 @@ void BattlegroundMgr::CreateInitialBattlegrounds()
             if (bgTypeID != BATTLEGROUND_AA)
                 m_ArenaSelectionWeights[bgTypeID] = selectionWeight;
         }
-        else if (bgTypeID != BATTLEGROUND_RB)
-            m_BGSelectionWeights[bgTypeID] = selectionWeight;
-        ++count;
     } while (result->NextRow());
 
     sLog->outString();
@@ -836,12 +760,12 @@ void BattlegroundMgr::BuildBattlegroundListPacket(WorldPacket *data, const uint6
     if (!player)
         return;
 
-    uint32 win_kills = player->GetRandomWinner() ? BG_REWARD_WINNER_HONOR_LAST : BG_REWARD_WINNER_HONOR_FIRST;
+    uint32 winning_kills = player->GetRandomWinner() ? BG_REWARD_WINNER_HONOR_LAST : BG_REWARD_WINNER_HONOR_FIRST;
     uint32 win_arena = player->GetRandomWinner() ? BG_REWARD_WINNER_ARENA_LAST : BG_REWARD_WINNER_ARENA_FIRST;
-    uint32 loos_kills = player->GetRandomWinner() ? BG_REWARD_LOOSER_HONOR_LAST : BG_REWARD_LOOSER_HONOR_FIRST;
+    uint32 losing_kills = player->GetRandomWinner() ? BG_REWARD_LOOSER_HONOR_LAST : BG_REWARD_LOOSER_HONOR_FIRST;
 
-    win_kills = Trinity::Honor::hk_honor_at_level(player->getLevel(), win_kills);
-    loos_kills = Trinity::Honor::hk_honor_at_level(player->getLevel(), loos_kills);
+    winning_kills = Trinity::Honor::hk_honor_at_level(player->getLevel(), winning_kills);
+    losing_kills = Trinity::Honor::hk_honor_at_level(player->getLevel(), losing_kills);
 
     data->Initialize(SMSG_BATTLEFIELD_LIST);
     *data << uint64(guid);                                  // battlemaster guid
@@ -852,9 +776,9 @@ void BattlegroundMgr::BuildBattlegroundListPacket(WorldPacket *data, const uint6
 
     // Rewards
     *data << uint8(player->GetRandomWinner());               // 3.3.3 hasWin
-    *data << uint32(win_kills);                           // 3.3.3 winHonor
+    *data << uint32(winning_kills);                           // 3.3.3 winHonor
     *data << uint32(win_arena);                           // 3.3.3 winArena
-    *data << uint32(loos_kills);                          // 3.3.3 lossHonor
+    *data << uint32(losing_kills);                          // 3.3.3 lossHonor
 
     uint8 isRandom = bgTypeId == BATTLEGROUND_RB;
 
@@ -863,9 +787,9 @@ void BattlegroundMgr::BuildBattlegroundListPacket(WorldPacket *data, const uint6
     {
         // Rewards (random)
         *data << uint8(player->GetRandomWinner());           // 3.3.3 hasWin_Random
-        *data << uint32(win_kills);                       // 3.3.3 winHonor_Random
+        *data << uint32(winning_kills);                       // 3.3.3 winHonor_Random
         *data << uint32(win_arena);                       // 3.3.3 winArena_Random
-        *data << uint32(loos_kills);                      // 3.3.3 lossHonor_Random
+        *data << uint32(losing_kills);                      // 3.3.3 lossHonor_Random
     }
 
     if (bgTypeId == BATTLEGROUND_AA)                         // arena
@@ -946,10 +870,7 @@ bool BattlegroundMgr::IsArenaType(BattlegroundTypeId bgTypeId)
     return (bgTypeId == BATTLEGROUND_AA ||
         bgTypeId == BATTLEGROUND_BE ||
         bgTypeId == BATTLEGROUND_NA ||
-        bgTypeId == BATTLEGROUND_DS ||
-        bgTypeId == BATTLEGROUND_RV ||
-        bgTypeId == BATTLEGROUND_RL ||
-        bgTypeId == BATTLEGROUND_DS);
+        bgTypeId == BATTLEGROUND_RL);
 }
 
 BattlegroundQueueTypeId BattlegroundMgr::BGQueueTypeId(BattlegroundTypeId bgTypeId, uint8 arenaType)
@@ -964,18 +885,10 @@ BattlegroundQueueTypeId BattlegroundMgr::BGQueueTypeId(BattlegroundTypeId bgType
             return BATTLEGROUND_QUEUE_AV;
         case BATTLEGROUND_EY:
             return BATTLEGROUND_QUEUE_EY;
-        case BATTLEGROUND_SA:
-            return BATTLEGROUND_QUEUE_SA;
-        case BATTLEGROUND_IC:
-            return BATTLEGROUND_QUEUE_IC;
-        case BATTLEGROUND_RB:
-            return BATTLEGROUND_QUEUE_RB;
         case BATTLEGROUND_AA:
         case BATTLEGROUND_NA:
         case BATTLEGROUND_RL:
         case BATTLEGROUND_BE:
-        case BATTLEGROUND_DS:
-        case BATTLEGROUND_RV:
             switch (arenaType)
             {
                 case ARENA_TYPE_2v2:
@@ -1004,12 +917,6 @@ BattlegroundTypeId BattlegroundMgr::BGTemplateId(BattlegroundQueueTypeId bgQueue
             return BATTLEGROUND_AV;
         case BATTLEGROUND_QUEUE_EY:
             return BATTLEGROUND_EY;
-        case BATTLEGROUND_QUEUE_SA:
-            return BATTLEGROUND_SA;
-        case BATTLEGROUND_QUEUE_IC:
-            return BATTLEGROUND_IC;
-        case BATTLEGROUND_QUEUE_RB:
-            return BATTLEGROUND_RB;
         case BATTLEGROUND_QUEUE_2v2:
         case BATTLEGROUND_QUEUE_3v3:
         case BATTLEGROUND_QUEUE_5v5:
@@ -1119,21 +1026,14 @@ void BattlegroundMgr::LoadBattleMastersEntry()
 
     if (!result)
     {
-        barGoLink bar(1);
-        bar.step();
-
         sLog->outString();
         sLog->outString(">> Loaded 0 battlemaster entries - table is empty!");
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
-
     do
     {
         ++count;
-        bar.step();
-
         Field *fields = result->Fetch();
 
         uint32 entry = fields[0].GetUInt32();
@@ -1158,7 +1058,6 @@ HolidayIds BattlegroundMgr::BGTypeToWeekendHolidayId(BattlegroundTypeId bgTypeId
         case BATTLEGROUND_AV: return HOLIDAY_CALL_TO_ARMS_AV;
         case BATTLEGROUND_EY: return HOLIDAY_CALL_TO_ARMS_EY;
         case BATTLEGROUND_WS: return HOLIDAY_CALL_TO_ARMS_WS;
-        case BATTLEGROUND_SA: return HOLIDAY_CALL_TO_ARMS_SA;
         default: return HOLIDAY_NONE;
     }
 }
@@ -1170,7 +1069,6 @@ BattlegroundTypeId BattlegroundMgr::WeekendHolidayIdToBGType(HolidayIds holiday)
         case HOLIDAY_CALL_TO_ARMS_AV: return BATTLEGROUND_AV;
         case HOLIDAY_CALL_TO_ARMS_EY: return BATTLEGROUND_EY;
         case HOLIDAY_CALL_TO_ARMS_WS: return BATTLEGROUND_WS;
-        case HOLIDAY_CALL_TO_ARMS_SA: return BATTLEGROUND_SA;
         default: return BATTLEGROUND_TYPE_NONE;
     }
 }
@@ -1178,25 +1076,4 @@ BattlegroundTypeId BattlegroundMgr::WeekendHolidayIdToBGType(HolidayIds holiday)
 bool BattlegroundMgr::IsBGWeekend(BattlegroundTypeId bgTypeId)
 {
     return IsHolidayActive(BGTypeToWeekendHolidayId(bgTypeId));
-}
-
-void BattlegroundMgr::DoCompleteAchievement(uint32 achievement, Player* player)
-{
-    AchievementEntry const* AE = GetAchievementStore()->LookupEntry(achievement);
-
-    if (!player)
-    {
-        //Map::PlayerList const &PlayerList = this->GetPlayers();
-        //GroupsQueueType::iterator group = SelectedGroups.begin();
-
-        //if (!PlayerList.isEmpty())
-            //for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-        //    for (GroupsQueueType::iterator itr = group; itr != SelectedGroups.end(); ++itr)
-        //        if (Player *pPlayer = itr->getSource())
-        //            pPlayer->CompletedAchievement(AE);
-    }
-    else
-    {
-        player->CompletedAchievement(AE);
-    }
 }

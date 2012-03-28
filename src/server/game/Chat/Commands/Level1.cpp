@@ -858,9 +858,9 @@ bool ChatHandler::HandleSummonCommand(const char* args)
                 SetSentErrorMessage(true);
                 return false;
             }
-            // all's well, set bg id
+            // alls well, set bg id
             // when porting out from the bg, it will be reset to 0
-            target->SetBattlegroundId(m_session->GetPlayer()->GetBattlegroundId());
+            target->SetBattlegroundId(m_session->GetPlayer()->GetBattlegroundId(), BATTLEGROUND_AA);
             // remember current position as entry point for return at bg end teleportation
             if (!target->GetMap()->IsBattlegroundOrArena())
                 target->SetBattlegroundEntryPoint();
@@ -966,9 +966,9 @@ bool ChatHandler::HandleAppearCommand(const char* args)
                 SetSentErrorMessage(true);
                 return false;
             }
-            // all's well, set bg id
+            // alls well, set bg id
             // when porting out from the bg, it will be reset to 0
-            _player->SetBattlegroundId(target->GetBattlegroundId());
+            _player->SetBattlegroundId(target->GetBattlegroundId(), BATTLEGROUND_AA);
             // remember current position as entry point for return at bg end teleportation
             if (!_player->GetMap()->IsBattlegroundOrArena())
                 _player->SetBattlegroundEntryPoint();
