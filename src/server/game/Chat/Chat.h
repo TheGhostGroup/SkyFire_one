@@ -158,7 +158,6 @@ class ChatHandler
         bool HandleLookupAreaCommand(const char* args);
         bool HandleLookupCreatureCommand(const char* args);
         bool HandleLookupEventCommand(const char* args);
-        bool HandleLookupFactionCommand(const char * args);
         bool HandleLookupItemCommand(const char * args);
         bool HandleLookupItemSetCommand(const char * args);
         bool HandleLookupObjectCommand(const char* args);

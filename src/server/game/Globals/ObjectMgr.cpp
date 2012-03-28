@@ -6629,11 +6629,6 @@ bool PlayerCondition::Meets(Player const * player) const
             return player->GetItemOrItemWithGemEquipped(value1) != NULL;
         case CONDITION_ZONEID:
             return player->GetZoneId() == value1;
-        case CONDITION_REPUTATION_RANK:
-        {
-            FactionEntry const* faction = sFactionStore.LookupEntry(value1);
-            return faction && player->GetReputationRank(faction) >= value2;
-        }
         case CONDITION_TEAM:
             return player->GetTeam() == value1;
         case CONDITION_SKILL:
