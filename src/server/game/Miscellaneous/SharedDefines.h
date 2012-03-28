@@ -93,6 +93,8 @@ enum Classes
 #define CLASSMASK_WAND_USERS ((1<<(CLASS_PRIEST-1))|(1<<(CLASS_MAGE-1))|(1<<(CLASS_WARLOCK-1)))
 
 #define PLAYER_MAX_BATTLEGROUND_QUEUES 3
+#define MIN_REPUTATION_RANK (REP_HATED)
+#define MAX_REPUTATION_RANK 8
 
 enum ReputationRank
 {
@@ -108,6 +110,8 @@ enum ReputationRank
 
 #define MIN_REPUTATION_RANK (REP_HATED)
 #define MAX_REPUTATION_RANK 8
+
+#define MAX_SPILLOVER_FACTIONS 4
 
 enum MoneyConstants
 {

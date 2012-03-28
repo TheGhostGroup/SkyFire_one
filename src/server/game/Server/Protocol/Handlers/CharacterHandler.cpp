@@ -691,64 +691,6 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
 
     if (sWorld->getConfig(CONFIG_ALL_TAXI_PATHS))
         pCurrChar->SetTaxiCheater(true);
-
-    //Reputations if "StartAllReputation" is enabled
-    if (sWorld->getConfig(CONFIG_START_ALL_REP))
-    {
-        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(942), 42999);
-        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(935), 42999);
-        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(936), 42999);
-        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(1011), 42999);
-        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(970), 42999);
-        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(967), 42999);
-        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(989), 42999);
-        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(932), 42999);
-        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(934), 42999);
-        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(1038), 42999);
-        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(1077), 42999);
-        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(990), 42999);
-
-        // Factions depending on team, like cities and some more stuff
-        switch (pCurrChar->GetTeam())
-        {
-        case ALLIANCE:
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(72), 42999);
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(47), 42999);
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(69), 42999);
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(930), 42999);
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(730), 42999);
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(978), 42999);
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(54), 42999);
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(946), 42999);
-            break;
-        case HORDE:
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(76), 42999);
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(68), 42999);
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(81), 42999);
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(911), 42999);
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(729), 42999);
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(941), 42999);
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(530), 42999);
-            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(947), 42999);
-            break;
-        default:
-                break;
-        }
-    }
-
-    if (pCurrChar->isGameMaster())
-        SendNotification(LANG_GM_ON);
-
-    std::string IP_str = GetRemoteAddress();
-    sLog->outChar("Account: %d (IP: %s) Login Character:[%s] (guid: %u)",
-        GetAccountId(), IP_str.c_str(), pCurrChar->GetName(), pCurrChar->GetGUIDLow());
-
-    m_playerLoading = false;
-
-    //Hook for OnLogin Event
-    sScriptMgr->OnLogin(pCurrChar);
-
-    delete holder;
 }
 
 void WorldSession::HandleSetFactionAtWar(WorldPacket & recv_data)
@@ -761,15 +703,33 @@ void WorldSession::HandleSetFactionAtWar(WorldPacket & recv_data)
     recv_data >> repListID;
     recv_data >> flag;
 
-    FactionStateList::iterator itr = GetPlayer()->m_factions.find(repListID);
-    if (itr == GetPlayer()->m_factions.end())
-        return;
+    GetPlayer()->GetReputationMgr().SetAtWar(repListID,flag);
+}
 
-    // always invisible or hidden faction can't change war state
-    if (itr->second.Flags & (FACTION_FLAG_INVISIBLE_FORCED|FACTION_FLAG_HIDDEN))
-        return;
+//I think this function is never used :/ I dunno, but i guess this opcode not exists
+void WorldSession::HandleSetFactionCheat(WorldPacket & /*recv_data*/)
+{
+    sLog->outError("WORLD SESSION: HandleSetFactionCheat, not expected call, please report.");
+    /*
+        uint32 FactionID;
+        uint32 Standing;
 
-    GetPlayer()->SetFactionAtWar(&itr->second, flag);
+        recv_data >> FactionID;
+        recv_data >> Standing;
+
+        std::list<struct Factions>::iterator itr;
+
+        for (itr = GetPlayer()->factions.begin(); itr != GetPlayer()->factions.end(); ++itr)
+        {
+            if (itr->ReputationListID == FactionID)
+            {
+                itr->Standing += Standing;
+                itr->Flags = (itr->Flags | 1);
+                break;
+            }
+        }
+    */
+    GetPlayer()->GetReputationMgr().SendStates();
 }
 
 void WorldSession::HandleMeetingStoneInfo(WorldPacket & /*recv_data*/)
@@ -813,12 +773,12 @@ void WorldSession::HandleTutorialReset(WorldPacket & /*recv_data*/)
         GetPlayer()->SetTutorialInt(i, 0x00000000);
 }
 
-void WorldSession::HandleSetWatchedFactionIndexOpcode(WorldPacket & recv_data)
+void WorldSession::HandleSetWatchedFactionOpcode(WorldPacket & recv_data)
 {
     sLog->outDebug("WORLD: Received CMSG_SET_WATCHED_FACTION");
-    int32 repId;
-    recv_data >> repId;
-    GetPlayer()->SetInt32Value(PLAYER_FIELD_WATCHED_FACTION_INDEX, repId);
+    uint32 fact;
+    recv_data >> fact;
+    GetPlayer()->SetUInt32Value(PLAYER_FIELD_WATCHED_FACTION_INDEX, fact);
 }
 
 void WorldSession::HandleSetWatchedFactionInactiveOpcode(WorldPacket & recv_data)
@@ -828,11 +788,7 @@ void WorldSession::HandleSetWatchedFactionInactiveOpcode(WorldPacket & recv_data
     uint8 inactive;
     recv_data >> replistid >> inactive;
 
-    FactionStateList::iterator itr = _player->m_factions.find(replistid);
-    if (itr == _player->m_factions.end())
-        return;
-
-    _player->SetFactionInactive(&itr->second, inactive);
+    _player->GetReputationMgr().SetInactive(replistid, inactive);
 }
 
 void WorldSession::HandleToggleHelmOpcode(WorldPacket & /*recv_data*/)

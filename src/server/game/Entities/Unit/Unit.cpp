@@ -6447,10 +6447,12 @@ FactionTemplateEntry const* Unit::getFactionTemplateEntry() const
 
         if (GetGUID() != guid)
         {
-            if (GetTypeId() == TYPEID_PLAYER)
-                sLog->outError("Player %s has invalid faction (faction template id) #%u", ToPlayer()->GetName(), getFaction());
+            if (const Player *player = ToPlayer())
+                sLog->outError("Player %s has invalid faction (faction template id) #%u", player->GetName(), getFaction());
+            else if (const Creature *creature = ToCreature())
+                sLog->outError("Creature (template id: %u) has invalid faction (faction template id) #%u", creature->GetCreatureTemplate()->Entry, getFaction());
             else
-                sLog->outError("Creature (template id: %u) has invalid faction (faction template id) #%u", ToCreature()->GetCreatureTemplate()->Entry, getFaction());
+                sLog->outError("Unit (name=%s, type=%u) has invalid faction (faction template id) #%u", GetName(), uint32(GetTypeId()), getFaction());
 
             guid = GetGUID();
         }
@@ -6460,12 +6462,14 @@ FactionTemplateEntry const* Unit::getFactionTemplateEntry() const
 
 bool Unit::IsHostileTo(Unit const* unit) const
 {
+    if (!unit)
+        return false;
     // always non-hostile to self
     if (unit == this)
         return false;
 
     // always non-hostile to GM in GM mode
-    if (unit->GetTypeId() == TYPEID_PLAYER && unit->ToPlayer()->isGameMaster())
+    if (unit->GetTypeId() == TYPEID_PLAYER && ((Player const*)unit)->isGameMaster())
         return false;
 
     // always hostile to enemy
@@ -6519,16 +6523,19 @@ bool Unit::IsHostileTo(Unit const* unit) const
 
         //= PvP states
         // Green/Blue (can't attack)
-        if (pTester->GetTeam() == pTarget->GetTeam())
-            return false;
+        if (!pTester->HasAuraType(SPELL_AURA_MOD_FACTION) && !pTarget->HasAuraType(SPELL_AURA_MOD_FACTION))
+        {
+            if (pTester->GetTeam() == pTarget->GetTeam())
+                return false;
 
-        // Red (can attack) if true, Blue/Yellow (can't attack) in another case
-        return pTester->IsPvP() && pTarget->IsPvP();
+            // Red (can attack) if true, Blue/Yellow (can't attack) in another case
+            return pTester->IsPvP() && pTarget->IsPvP();
+        }
     }
 
     // faction base cases
-    FactionTemplateEntry const*tester_faction = tester->getFactionTemplateEntry();
-    FactionTemplateEntry const*target_faction = target->getFactionTemplateEntry();
+    FactionTemplateEntry const* tester_faction = tester->getFactionTemplateEntry();
+    FactionTemplateEntry const* target_faction = target->getFactionTemplateEntry();
     if (!tester_faction || !target_faction)
         return false;
 
@@ -6536,31 +6543,34 @@ bool Unit::IsHostileTo(Unit const* unit) const
         return true;
 
     // PvC forced reaction and reputation case
-    if (tester->GetTypeId() == TYPEID_PLAYER)
+    if (tester->GetTypeId() == TYPEID_PLAYER && !tester->HasAuraType(SPELL_AURA_MOD_FACTION))
     {
         // forced reaction
-        ForcedReactions::const_iterator forceItr = tester->ToPlayer()->m_forcedReactions.find(target_faction->faction);
-        if (forceItr != tester->ToPlayer()->m_forcedReactions.end())
-            return forceItr->second <= REP_HOSTILE;
+        if (target_faction->faction)
+        {
+            if (ReputationRank const* force =tester->ToPlayer()->GetReputationMgr().GetForcedRankIfAny(target_faction))
+                return *force <= REP_HOSTILE;
 
-        // if faction have reputation then hostile state for tester at 100% dependent from at_war state
-        if (FactionEntry const* raw_target_faction = sFactionStore.LookupEntry(target_faction->faction))
-            if (raw_target_faction->reputationListID >=0)
-                if (FactionState const* factionState = tester->ToPlayer()->GetFactionState(raw_target_faction))
+            // if faction have reputation then hostile state for tester at 100% dependent from at_war state
+            if (FactionEntry const* raw_target_faction = sFactionStore.LookupEntry(target_faction->faction))
+                if (FactionState const* factionState = tester->ToPlayer()->GetReputationMgr().GetState(raw_target_faction))
                     return (factionState->Flags & FACTION_FLAG_AT_WAR);
+        }
     }
     // CvP forced reaction and reputation case
-    else if (target->GetTypeId() == TYPEID_PLAYER)
+    else if (target->GetTypeId() == TYPEID_PLAYER && !target->HasAuraType(SPELL_AURA_MOD_FACTION))
     {
         // forced reaction
-        ForcedReactions::const_iterator forceItr = target->ToPlayer()->m_forcedReactions.find(tester_faction->faction);
-        if (forceItr != target->ToPlayer()->m_forcedReactions.end())
-            return forceItr->second <= REP_HOSTILE;
+        if (tester_faction->faction)
+        {
+            if (ReputationRank const* force = target->ToPlayer()->GetReputationMgr().GetForcedRankIfAny(tester_faction))
+                return *force <= REP_HOSTILE;
 
-        // apply reputation state
-        FactionEntry const* raw_tester_faction = sFactionStore.LookupEntry(tester_faction->faction);
-        if (raw_tester_faction && raw_tester_faction->reputationListID >=0)
-            return target->ToPlayer()->GetReputationRank(raw_tester_faction) <= REP_HOSTILE;
+            // apply reputation state
+            FactionEntry const* raw_tester_faction = sFactionStore.LookupEntry(tester_faction->faction);
+            if (raw_tester_faction && raw_tester_faction->reputationListID >=0)
+                return ((Player const*)target)->GetReputationMgr().GetRank(raw_tester_faction) <= REP_HOSTILE;
+        }
     }
 
     // common faction based case (CvC, PvC, CvP)
@@ -6574,7 +6584,7 @@ bool Unit::IsFriendlyTo(Unit const* unit) const
         return true;
 
     // always friendly to GM in GM mode
-    if (unit->GetTypeId() == TYPEID_PLAYER && unit->ToPlayer()->isGameMaster())
+    if (unit->GetTypeId() == TYPEID_PLAYER && ((Player const*)unit)->isGameMaster())
         return true;
 
     // always non-friendly to enemy
@@ -6628,16 +6638,19 @@ bool Unit::IsFriendlyTo(Unit const* unit) const
 
         //= PvP states
         // Green/Blue (non-attackable)
-        if (pTester->GetTeam() == pTarget->GetTeam())
-            return true;
+        if (!pTester->HasAuraType(SPELL_AURA_MOD_FACTION) && !pTarget->HasAuraType(SPELL_AURA_MOD_FACTION))
+        {
+            if (pTester->GetTeam() == pTarget->GetTeam())
+                return true;
 
-        // Blue (friendly/non-attackable) if not PVP, or Yellow/Red in another case (attackable)
-        return !pTarget->IsPvP();
+            // Blue (friendly/non-attackable) if not PVP, or Yellow/Red in another case (attackable)
+            return !pTarget->IsPvP();
+        }
     }
 
     // faction base cases
-    FactionTemplateEntry const*tester_faction = tester->getFactionTemplateEntry();
-    FactionTemplateEntry const*target_faction = target->getFactionTemplateEntry();
+    FactionTemplateEntry const* tester_faction = tester->getFactionTemplateEntry();
+    FactionTemplateEntry const* target_faction = target->getFactionTemplateEntry();
     if (!tester_faction || !target_faction)
         return false;
 
@@ -6645,41 +6658,44 @@ bool Unit::IsFriendlyTo(Unit const* unit) const
         return false;
 
     // PvC forced reaction and reputation case
-    if (tester->GetTypeId() == TYPEID_PLAYER)
+    if (tester->GetTypeId() == TYPEID_PLAYER && !tester->HasAuraType(SPELL_AURA_MOD_FACTION))
     {
         // forced reaction
-        ForcedReactions::const_iterator forceItr = tester->ToPlayer()->m_forcedReactions.find(target_faction->faction);
-        if (forceItr != tester->ToPlayer()->m_forcedReactions.end())
-            return forceItr->second >= REP_FRIENDLY;
+        if (target_faction->faction)
+        {
+            if (ReputationRank const* force = tester->ToPlayer()->GetReputationMgr().GetForcedRankIfAny(target_faction))
+                return *force >= REP_FRIENDLY;
 
-        // if faction have reputation then friendly state for tester at 100% dependent from at_war state
-        if (FactionEntry const* raw_target_faction = sFactionStore.LookupEntry(target_faction->faction))
-            if (raw_target_faction->reputationListID >=0)
-                if (FactionState const* FactionState = tester->ToPlayer()->GetFactionState(raw_target_faction))
-                    return !(FactionState->Flags & FACTION_FLAG_AT_WAR);
+            // if faction have reputation then friendly state for tester at 100% dependent from at_war state
+            if (FactionEntry const* raw_target_faction = sFactionStore.LookupEntry(target_faction->faction))
+                if (FactionState const* factionState = tester->ToPlayer()->GetReputationMgr().GetState(raw_target_faction))
+                    return !(factionState->Flags & FACTION_FLAG_AT_WAR);
+        }
     }
     // CvP forced reaction and reputation case
-    else if (target->GetTypeId() == TYPEID_PLAYER)
+    else if (target->GetTypeId() == TYPEID_PLAYER && !target->HasAuraType(SPELL_AURA_MOD_FACTION))
     {
         // forced reaction
-        ForcedReactions::const_iterator forceItr = target->ToPlayer()->m_forcedReactions.find(tester_faction->faction);
-        if (forceItr != target->ToPlayer()->m_forcedReactions.end())
-            return forceItr->second >= REP_FRIENDLY;
+        if (tester_faction->faction)
+        {
+            if (ReputationRank const *force = target->ToPlayer()->GetReputationMgr().GetForcedRankIfAny(tester_faction))
+                return *force >= REP_FRIENDLY;
 
-        // apply reputation state
-        if (FactionEntry const* raw_tester_faction = sFactionStore.LookupEntry(tester_faction->faction))
-            if (raw_tester_faction->reputationListID >=0)
-                return target->ToPlayer()->GetReputationRank(raw_tester_faction) >= REP_FRIENDLY;
+            // apply reputation state
+            if (FactionEntry const *raw_tester_faction = sFactionStore.LookupEntry(tester_faction->faction))
+                if (raw_tester_faction->reputationListID >= 0)
+                    return ((Player const*)target)->GetReputationMgr().GetRank(raw_tester_faction) >= REP_FRIENDLY;
+        }
     }
 
-    // common faction based case (CvC, PvC, CvP)
+    // common faction based case (CvC,PvC,CvP)
     return tester_faction->IsFriendlyTo(*target_faction);
 }
 
 bool Unit::IsHostileToPlayers() const
 {
     FactionTemplateEntry const *my_faction = getFactionTemplateEntry();
-    if (!my_faction)
+    if (!my_faction || !my_faction->faction)
         return false;
 
     FactionEntry const *raw_faction = sFactionStore.LookupEntry(my_faction->faction);
@@ -6692,7 +6708,7 @@ bool Unit::IsHostileToPlayers() const
 bool Unit::IsNeutralToAll() const
 {
     FactionTemplateEntry const *my_faction = getFactionTemplateEntry();
-    if (!my_faction)
+    if (!my_faction || !my_faction->faction)
         return true;
 
     FactionEntry const *raw_faction = sFactionStore.LookupEntry(my_faction->faction);

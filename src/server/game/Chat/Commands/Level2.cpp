@@ -47,12 +47,6 @@
 
 #include "TargetedMovementGenerator.h"                      // for HandleNpcUnFollowCommand
 
-static uint32 ReputationRankStrIndex[MAX_REPUTATION_RANK] =
-{
-    LANG_REP_HATED,    LANG_REP_HOSTILE, LANG_REP_UNFRIENDLY, LANG_REP_NEUTRAL,
-    LANG_REP_FRIENDLY, LANG_REP_HONORED, LANG_REP_REVERED,    LANG_REP_EXALTED
-};
-
 //mute player for some times
 bool ChatHandler::HandleMuteCommand(const char* args)
 {
@@ -843,6 +837,7 @@ bool ChatHandler::HandleGameObjectCommand(const char* args)
     PSendSysMessage(LANG_GAMEOBJECT_ADD, id, gInfo->name, db_lowGUID, x, y, z);
     return true;
 }
+
 bool ChatHandler::HandleGUIDCommand(const char* /*args*/)
 {
     uint64 guid = m_session->GetPlayer()->GetSelection();
@@ -872,7 +867,7 @@ bool ChatHandler::HandleModifyRepCommand(const char * args)
         return false;
     }
 
-    char* factionTxt = extractKeyFromLink((char*)args, "Hfaction");
+    char* factionTxt = extractKeyFromLink((char*)args,"Hfaction");
     if (!factionTxt)
         return false;
 
@@ -888,7 +883,7 @@ bool ChatHandler::HandleModifyRepCommand(const char * args)
     {
         std::string rankStr = rankTxt;
         std::wstring wrankStr;
-        if (!Utf8toWStr(rankStr, wrankStr))
+        if (!Utf8toWStr(rankStr,wrankStr))
             return false;
         wstrToLower(wrankStr);
 
@@ -901,20 +896,20 @@ bool ChatHandler::HandleModifyRepCommand(const char * args)
                 continue;
 
             std::wstring wrank;
-            if (!Utf8toWStr(rank, wrank))
+            if (!Utf8toWStr(rank,wrank))
                 continue;
 
             wstrToLower(wrank);
 
-            if (wrank.substr(0, wrankStr.size()) == wrankStr)
+            if (wrank.substr(0,wrankStr.size()) == wrankStr)
             {
                 char *deltaTxt = strtok(NULL, " ");
                 if (deltaTxt)
                 {
                     int32 delta = atoi(deltaTxt);
-                    if ((delta < 0) || (delta > Player::ReputationRank_Length[r] -1))
+                    if ((delta < 0) || (delta > ReputationMgr::PointsInRank[r] -1))
                     {
-                        PSendSysMessage(LANG_COMMAND_FACTION_DELTA, (Player::ReputationRank_Length[r]-1));
+                        PSendSysMessage(LANG_COMMAND_FACTION_DELTA, (ReputationMgr::PointsInRank[r]-1));
                         SetSentErrorMessage(true);
                         return false;
                     }
@@ -922,7 +917,7 @@ bool ChatHandler::HandleModifyRepCommand(const char * args)
                 }
                 break;
             }
-            amount += Player::ReputationRank_Length[r];
+            amount += ReputationMgr::PointsInRank[r];
         }
         if (r >= MAX_REPUTATION_RANK)
         {
@@ -948,8 +943,9 @@ bool ChatHandler::HandleModifyRepCommand(const char * args)
         return false;
     }
 
-    target->SetFactionReputation(factionEntry, amount);
-    PSendSysMessage(LANG_COMMAND_MODIFY_REP, factionEntry->name[m_session->GetSessionDbcLocale()], factionId, target->GetName(), target->GetReputation(factionId));
+    target->GetReputationMgr().SetReputation(factionEntry,amount);
+    PSendSysMessage(LANG_COMMAND_MODIFY_REP, factionEntry->name[m_session->GetSessionDbcLocale()], factionId,
+        target->GetReputationMgr().GetReputation(factionEntry));
     return true;
 }
 
@@ -2102,37 +2098,7 @@ bool ChatHandler::HandlePInfoCommand(const char* args)
             SetSentErrorMessage(true);
             return false;
         }
-
-        char* FactionName;
-        for (FactionStateList::const_iterator itr = target->m_factions.begin(); itr != target->m_factions.end(); ++itr)
-        {
-            FactionEntry const *factionEntry = sFactionStore.LookupEntry(itr->second.ID);
-            if (factionEntry)
-                FactionName = factionEntry->name[m_session->GetSessionDbcLocale()];
-            else
-                FactionName = "#Not found#";
-            ReputationRank rank = target->GetReputationRank(factionEntry);
-            std::string rankName = GetSkyFireString(ReputationRankStrIndex[rank]);
-            std::ostringstream ss;
-            ss << itr->second.ID << ": |cffffffff|Hfaction:" << itr->second.ID << "|h[" << FactionName << "]|h|r " << rankName << "|h|r (" << target->GetReputation(factionEntry) << ")";
-
-            if (itr->second.Flags & FACTION_FLAG_VISIBLE)
-                ss << GetSkyFireString(LANG_FACTION_VISIBLE);
-            if (itr->second.Flags & FACTION_FLAG_AT_WAR)
-                ss << GetSkyFireString(LANG_FACTION_ATWAR);
-            if (itr->second.Flags & FACTION_FLAG_PEACE_FORCED)
-                ss << GetSkyFireString(LANG_FACTION_PEACE_FORCED);
-            if (itr->second.Flags & FACTION_FLAG_HIDDEN)
-                ss << GetSkyFireString(LANG_FACTION_HIDDEN);
-            if (itr->second.Flags & FACTION_FLAG_INVISIBLE_FORCED)
-                ss << GetSkyFireString(LANG_FACTION_INVISIBLE_FORCED);
-            if (itr->second.Flags & FACTION_FLAG_INACTIVE)
-                ss << GetSkyFireString(LANG_FACTION_INACTIVE);
-
-            SendSysMessage(ss.str().c_str());
-        }
     }
-    return true;
 }
 
 // WAYPOINT COMMANDS

@@ -2985,7 +2985,7 @@ void Aura::HandleForceReaction(bool apply, bool Real)
         player->m_forcedReactions.erase(faction_id);
 
     WorldPacket data;
-    data.Initialize(SMSG_SET_FORCED_REACTIONS, 4+player->m_forcedReactions.size()*(4+4));
+    data.Initialize(SMSG_SET_FORCED_REACTIONS, 4 + player->m_forcedReactions.size()*(4 + 4));
     data << uint32(player->m_forcedReactions.size());
     for (ForcedReactions::const_iterator itr = player->m_forcedReactions.begin(); itr != player->m_forcedReactions.end(); ++itr)
     {
