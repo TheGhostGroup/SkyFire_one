@@ -5362,7 +5362,7 @@ bool ChatHandler::HandleBanInfoHelper(uint32 accountid, char const* accountname)
         std::string bantime = permanent?GetSkyFireString(LANG_BANINFO_INFINITE):secsToTimeString(fields[1].GetUInt64(), true);
         PSendSysMessage(LANG_BANINFO_HISTORYENTRY,
             fields[0].GetString(), bantime.c_str(), active ? GetSkyFireString(LANG_BANINFO_YES):GetSkyFireString(LANG_BANINFO_NO), fields[4].GetString(), fields[5].GetString());
-    }while (result->NextRow());
+    } while (result->NextRow());
 
     return true;
 }
@@ -5515,9 +5515,9 @@ bool ChatHandler::HandleBanListHelper(QueryResult_AutoPtr result)
                             aTm_unban->tm_year%100, aTm_unban->tm_mon+1, aTm_unban->tm_mday, aTm_unban->tm_hour, aTm_unban->tm_min,
                             fields2[2].GetString(), fields2[3].GetString());
                     }
-                }while (banInfo->NextRow());
+                } while (banInfo->NextRow());
             }
-        }while (result->NextRow());
+        } while (result->NextRow());
         SendSysMessage(" ===============================================================================");
     }
     return true;
@@ -5589,7 +5589,7 @@ bool ChatHandler::HandleBanListIPCommand(const char *args)
                     aTm_unban->tm_year%100, aTm_unban->tm_mon+1, aTm_unban->tm_mday, aTm_unban->tm_hour, aTm_unban->tm_min,
                     fields[3].GetString(), fields[4].GetString());
             }
-        }while (result->NextRow());
+        } while (result->NextRow());
         SendSysMessage(" ===============================================================================");
     }
 
@@ -6335,7 +6335,7 @@ bool ChatHandler::HandleGMListFullCommand(const char* /*args*/)
         {
             Field *fields = result->Fetch();
             PSendSysMessage("|%15s|%6s|", fields[0].GetString(), fields[1].GetString());
-        }while (result->NextRow());
+        } while (result->NextRow());
 
         PSendSysMessage(" ======================== ");
     }

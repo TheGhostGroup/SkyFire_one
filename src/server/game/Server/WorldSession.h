@@ -571,15 +571,15 @@ class WorldSession
         void HandleTotemDestroy(WorldPacket& recv_data);
 
         //Battleground
-        void HandleBattlegroundHelloOpcode(WorldPacket &recv_data);
-        void HandleBattlegroundJoinOpcode(WorldPacket &recv_data);
+        void HandleBattlemasterHelloOpcode(WorldPacket &recv_data);
+        void HandleBattlemasterJoinOpcode(WorldPacket &recv_data);
         void HandleBattlegroundPlayerPositionsOpcode(WorldPacket& recv_data);
-        void HandleBattlegroundPVPlogdataOpcode(WorldPacket &recv_data);
-        void HandleBattlegroundPlayerPortOpcode(WorldPacket &recv_data);
-        void HandleBattlegroundListOpcode(WorldPacket &recv_data);
-        void HandleBattlegroundLeaveOpcode(WorldPacket &recv_data);
-        void HandleBattlegroundArenaJoin(WorldPacket &recv_data);
-        void HandleBattlegroundReportAFK(WorldPacket &recv_data);
+        void HandlePVPLogDataOpcode(WorldPacket &recv_data);
+        void HandleBattleFieldPortOpcode(WorldPacket &recv_data);
+        void HandleBattlefieldListOpcode(WorldPacket &recv_data);
+        void HandleLeaveBattlefieldOpcode(WorldPacket &recv_data);
+        void HandleBattlemasterJoinArena(WorldPacket &recv_data);
+        void HandleReportPvPAFK(WorldPacket &recv_data);
 
         void HandleWardenDataOpcode(WorldPacket& recv_data);
         void HandleWorldTeleportOpcode(WorldPacket& recv_data);
@@ -604,16 +604,16 @@ class WorldSession
         void HandleResetInstancesOpcode(WorldPacket& recv_data);
 
         // Arena Team
-        void HandleInspectArenaStatsOpcode(WorldPacket& recv_data);
+        void HandleInspectArenaTeamsOpcode(WorldPacket& recv_data);
         void HandleArenaTeamQueryOpcode(WorldPacket& recv_data);
         void HandleArenaTeamRosterOpcode(WorldPacket& recv_data);
-        void HandleArenaTeamAddMemberOpcode(WorldPacket& recv_data);
-        void HandleArenaTeamInviteAcceptOpcode(WorldPacket& recv_data);
-        void HandleArenaTeamInviteDeclineOpcode(WorldPacket& recv_data);
+        void HandleArenaTeamInviteOpcode(WorldPacket& recv_data);
+        void HandleArenaTeamAcceptOpcode(WorldPacket& recv_data);
+        void HandleArenaTeamDeclineOpcode(WorldPacket& recv_data);
         void HandleArenaTeamLeaveOpcode(WorldPacket& recv_data);
-        void HandleArenaTeamRemoveFromTeamOpcode(WorldPacket& recv_data);
+        void HandleArenaTeamRemoveOpcode(WorldPacket& recv_data);
         void HandleArenaTeamDisbandOpcode(WorldPacket& recv_data);
-        void HandleArenaTeamPromoteToCaptainOpcode(WorldPacket& recv_data);
+        void HandleArenaTeamLeaderOpcode(WorldPacket& recv_data);
 
         void HandleAreaSpiritHealerQueryOpcode(WorldPacket& recv_data);
         void HandleAreaSpiritHealerQueueOpcode(WorldPacket& recv_data);

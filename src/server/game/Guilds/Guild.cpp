@@ -1573,7 +1573,7 @@ void Guild::LoadGuildBankEventLogFromDB()
             m_GuildBankEventLog_Money.push_front(NewEvent);
         else
             m_GuildBankEventLog_Item[TabId].push_front(NewEvent);
-    }while (result->NextRow());
+    } while (result->NextRow());
 
     // Check lists size in case to many event entries in db for a tab or for money
     // This cases can happen only if a crash occured somewhere and table has too many log entries

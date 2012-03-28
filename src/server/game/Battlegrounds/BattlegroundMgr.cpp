@@ -354,7 +354,7 @@ void BattlegroundMgr::BuildPlayerJoinedBattlegroundPacket(WorldPacket *data, Pla
 
 Battleground * BattlegroundMgr::GetBattlegroundThroughClientInstance(uint32 instanceId, BattlegroundTypeId bgTypeId)
 {
-    //cause at HandleBattlegroundJoinOpcode the clients sends the instanceid he gets from
+    //cause at HandleBattlemasterJoinOpcode the clients sends the instanceid he gets from
     //SMSG_BATTLEFIELD_LIST we need to find the battleground with this clientinstance-id
     Battleground* bg = GetBattlegroundTemplate(bgTypeId);
     if (!bg)

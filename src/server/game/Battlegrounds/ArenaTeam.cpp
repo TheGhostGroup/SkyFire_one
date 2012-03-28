@@ -109,7 +109,7 @@ bool ArenaTeam::AddMember(const uint64& PlayerGuid)
     {
         if (pl->GetArenaTeamId(GetSlot()))
         {
-            sLog->outError("Arena::AddMember() : player already in this sized team");
+            sLog->outError("Arena::AddMember() : player %u is already in this sized of team");
             return false;
         }
 
@@ -252,7 +252,7 @@ bool ArenaTeam::LoadMembersFromDB(QueryResult_AutoPtr arenaTeamMembersResult)
             captainPresentInTeam = true;
 
         m_members.push_back(newmember);
-    }while (arenaTeamMembersResult->NextRow());
+    } while (arenaTeamMembersResult->NextRow());
 
     if (Empty() || !captainPresentInTeam)
     {

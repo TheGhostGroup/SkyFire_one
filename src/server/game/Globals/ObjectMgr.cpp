@@ -2643,7 +2643,7 @@ void ObjectMgr::LoadGroups()
             continue;
         }
         AddGroup(group);
-    }while (result->NextRow());
+    } while (result->NextRow());
 
     sLog->outString();
     sLog->outString(">> Loaded %u group definitions", count);
@@ -2677,7 +2677,7 @@ void ObjectMgr::LoadGroups()
                 sLog->outErrorDb("Incorrect entry in group_member table : member %d cannot be added to player %d's group!", fields[0].GetUInt32(), fields[3].GetUInt32());
                 CharacterDatabase.PExecute("DELETE FROM group_member WHERE memberGuid = '%d'", fields[0].GetUInt32());
             }
-        }while (result->NextRow());
+        } while (result->NextRow());
     }
 
     // clean groups
@@ -2732,7 +2732,7 @@ void ObjectMgr::LoadGroups()
 
             InstanceSave *save = sInstanceSaveMgr->AddInstanceSave(mapEntry->MapID, fields[2].GetUInt32(), fields[4].GetUInt8(), (time_t)fields[5].GetUInt64(), (fields[6].GetUInt32() == 0), true);
             group->BindToInstance(save, fields[3].GetBool(), true);
-        }while (result->NextRow());
+        } while (result->NextRow());
     }
 
     sLog->outString();

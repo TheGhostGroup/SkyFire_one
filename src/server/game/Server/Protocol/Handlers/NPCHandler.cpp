@@ -498,7 +498,7 @@ void WorldSession::SendStablePet(uint64 guid)
             data << uint8(fields[1].GetUInt32()+1);         // slot
 
             ++num;
-        }while (result->NextRow());
+        } while (result->NextRow());
     }
 
     data.put<uint8>(8, num);                                // set real data to placeholder
@@ -551,7 +551,7 @@ void WorldSession::HandleStablePet(WorldPacket & recv_data)
 
             if (slot == free_slot)                             // this slot not free
                 ++free_slot;
-        }while (result->NextRow());
+        } while (result->NextRow());
     }
 
     if (free_slot > 0 && free_slot <= GetPlayer()->m_stableSlots)
