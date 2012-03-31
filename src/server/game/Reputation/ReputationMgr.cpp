@@ -335,13 +335,12 @@ bool ReputationMgr::SetOneFactionReputation(FactionEntry const* factionEntry, in
 
         SetVisible(&itr->second);
 
-        if (new_rank <= REP_HOSTILE)
-            SetAtWar(&itr->second, true);
+        if (ReputationToRank(standing) <= REP_HOSTILE)
+            SetAtWar(&itr->second,true);
 
         UpdateRankCounters(old_rank, new_rank);
 
-        m_player->ReputationChanged(factionEntry);
-
+        SendState(&(itr->second));
         return true;
     }
     return false;
@@ -374,7 +373,7 @@ void ReputationMgr::SetVisible(FactionState* faction)
 {
     // always invisible or hidden faction can't be make visible
     // except if faction has FACTION_FLAG_SPECIAL
-    if (faction->Flags & (FACTION_FLAG_INVISIBLE_FORCED|FACTION_FLAG_HIDDEN) && !(faction->Flags & FACTION_FLAG_SPECIAL))
+    if (faction->Flags & (FACTION_FLAG_INVISIBLE_FORCED | FACTION_FLAG_HIDDEN) && !(faction->Flags & FACTION_FLAG_SPECIAL))
         return;
 
     // already set

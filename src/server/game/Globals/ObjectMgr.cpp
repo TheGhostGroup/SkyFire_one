@@ -5707,20 +5707,138 @@ void ObjectMgr::LoadCorpses()
     sLog->outString(">> Loaded %u corpses", count);
 }
 
-void ObjectMgr::LoadReputationOnKill()
+void ObjectMgr::LoadWeatherZoneChances()
 {
     uint32 count = 0;
 
-    //                                                       0            1                     2
-    QueryResult_AutoPtr result = WorldDatabase.Query("SELECT creature_id, RewOnKillRepFaction1, RewOnKillRepFaction2, "
-    //   3             4             5                   6             7             8                   9
+    //                                                       0     1                   2                   3                    4                   5                   6                    7                 8                 9                  10                  11                  12
+    QueryResult_AutoPtr result = WorldDatabase.Query("SELECT zone, spring_rain_chance, spring_snow_chance, spring_storm_chance, summer_rain_chance, summer_snow_chance, summer_storm_chance, fall_rain_chance, fall_snow_chance, fall_storm_chance, winter_rain_chance, winter_snow_chance, winter_storm_chance FROM game_weather");
+
+    if (!result)
+    {
+        sLog->outString();
+        sLog->outErrorDb(">> Loaded 0 weather definitions. DB table game_weather is empty.");
+        return;
+    }
+
+    do
+    {
+        Field *fields = result->Fetch();
+
+        uint32 zone_id = fields[0].GetUInt32();
+
+        WeatherZoneChances& wzc = mWeatherZoneMap[zone_id];
+
+        for (int season = 0; season < WEATHER_SEASONS; ++season)
+        {
+            wzc.data[season].rainChance  = fields[season * (MAX_WEATHER_TYPE-1) + 1].GetUInt32();
+            wzc.data[season].snowChance  = fields[season * (MAX_WEATHER_TYPE-1) + 2].GetUInt32();
+            wzc.data[season].stormChance = fields[season * (MAX_WEATHER_TYPE-1) + 3].GetUInt32();
+
+            if (wzc.data[season].rainChance > 100)
+            {
+                wzc.data[season].rainChance = 25;
+                sLog->outErrorDb("Weather for zone %u season %u has wrong rain chance > 100%", zone_id, season);
+            }
+
+            if (wzc.data[season].snowChance > 100)
+            {
+                wzc.data[season].snowChance = 25;
+                sLog->outErrorDb("Weather for zone %u season %u has wrong snow chance > 100%", zone_id, season);
+            }
+
+            if (wzc.data[season].stormChance > 100)
+            {
+                wzc.data[season].stormChance = 25;
+                sLog->outErrorDb("Weather for zone %u season %u has wrong storm chance > 100%", zone_id, season);
+            }
+        }
+
+        ++count;
+    } while (result->NextRow());
+
+    sLog->outString();
+    sLog->outString(">> Loaded %u weather definitions", count);
+}
+
+void ObjectMgr::LoadReputationRewardRate()
+{
+    m_RepRewardRateMap.clear();                             // for reload case
+
+    uint32 count = 0;
+    QueryResult_AutoPtr result = WorldDatabase.Query("SELECT faction, quest_rate, creature_rate, spell_rate FROM reputation_reward_rate");
+
+    if (!result)
+    {
+        sLog->outString();
+        sLog->outErrorDb(">> Loaded `reputation_reward_rate`, table is empty!");
+        return;
+    }
+
+    do
+    {
+        Field *fields = result->Fetch();
+
+        uint32 factionId        = fields[0].GetUInt32();
+
+        RepRewardRate repRate;
+
+        repRate.quest_rate      = fields[1].GetFloat();
+        repRate.creature_rate   = fields[2].GetFloat();
+        repRate.spell_rate      = fields[3].GetFloat();
+
+        FactionEntry const *factionEntry = sFactionStore.LookupEntry(factionId);
+        if (!factionEntry)
+        {
+            sLog->outErrorDb("Faction (faction.dbc) %u does not exist but is used in `reputation_reward_rate`", factionId);
+            continue;
+        }
+
+        if (repRate.quest_rate < 0.0f)
+        {
+            sLog->outErrorDb("Table reputation_reward_rate has quest_rate with invalid rate %f, skipping data for faction %u", repRate.quest_rate, factionId);
+            continue;
+        }
+
+        if (repRate.creature_rate < 0.0f)
+        {
+            sLog->outErrorDb("Table reputation_reward_rate has creature_rate with invalid rate %f, skipping data for faction %u", repRate.creature_rate, factionId);
+            continue;
+        }
+
+        if (repRate.spell_rate < 0.0f)
+        {
+            sLog->outErrorDb("Table reputation_reward_rate has spell_rate with invalid rate %f, skipping data for faction %u", repRate.spell_rate, factionId);
+            continue;
+        }
+
+        m_RepRewardRateMap[factionId] = repRate;
+
+        ++count;
+    }
+    while (result->NextRow());
+
+    sLog->outString();
+    sLog->outString(">> Loaded %u reputation_reward_rate", count);
+}
+
+void ObjectMgr::LoadReputationOnKill()
+{
+    // For reload case
+    mRepOnKill.clear();
+
+    uint32 count = 0;
+
+    //                                                0            1                     2
+    QueryResult_AutoPtr result = WorldDatabase.Query("SELECT creature_id, RewOnKillRepFaction1, RewOnKillRepFaction2,"
+        //   3             4             5                   6             7             8                   9
         "IsTeamAward1, MaxStanding1, RewOnKillRepValue1, IsTeamAward2, MaxStanding2, RewOnKillRepValue2, TeamDependent "
         "FROM creature_onkill_reputation");
 
     if (!result)
     {
         sLog->outString();
-        sLog->outErrorDb(">> Loaded 0 creature award reputation definitions. DB table creature_onkill_reputation is empty.");
+        sLog->outErrorDb(">> Loaded 0 creature award reputation definitions. DB table `creature_onkill_reputation` is empty.");
         return;
     }
 
@@ -5743,7 +5861,7 @@ void ObjectMgr::LoadReputationOnKill()
 
         if (!GetCreatureTemplate(creature_id))
         {
-            sLog->outErrorDb("Table creature_onkill_reputation has data for invalid creature entry (%u), skipped", creature_id);
+            sLog->outErrorDb("Table `creature_onkill_reputation` have data for not existed creature entry (%u), skipped", creature_id);
             continue;
         }
 
@@ -5752,7 +5870,7 @@ void ObjectMgr::LoadReputationOnKill()
             FactionEntry const *factionEntry1 = sFactionStore.LookupEntry(repOnKill.repfaction1);
             if (!factionEntry1)
             {
-                sLog->outErrorDb("Faction (faction.dbc) %u does not exist but is used in creature_onkill_reputation", repOnKill.repfaction1);
+                sLog->outErrorDb("Faction (faction.dbc) %u does not exist but is used in `creature_onkill_reputation`", repOnKill.repfaction1);
                 continue;
             }
         }
@@ -5762,7 +5880,7 @@ void ObjectMgr::LoadReputationOnKill()
             FactionEntry const *factionEntry2 = sFactionStore.LookupEntry(repOnKill.repfaction2);
             if (!factionEntry2)
             {
-                sLog->outErrorDb("Faction (faction.dbc) %u does not exist but is used in creature_onkill_reputation", repOnKill.repfaction2);
+                sLog->outErrorDb("Faction (faction.dbc) %u does not exist but is used in `creature_onkill_reputation`", repOnKill.repfaction2);
                 continue;
             }
         }
@@ -5789,6 +5907,7 @@ void ObjectMgr::LoadReputationSpilloverTemplate()
         sLog->outErrorDb(">> Loaded `reputation_spillover_template`, table is empty!");
         return;
     }
+
     do
     {
         Field *fields = result->Fetch();
@@ -5883,60 +6002,6 @@ void ObjectMgr::LoadReputationSpilloverTemplate()
 
     sLog->outString();
     sLog->outString(">> Loaded %u reputation_spillover_template", count);
-}
-
-void ObjectMgr::LoadWeatherZoneChances()
-{
-    uint32 count = 0;
-
-    //                                                       0     1                   2                   3                    4                   5                   6                    7                 8                 9                  10                  11                  12
-    QueryResult_AutoPtr result = WorldDatabase.Query("SELECT zone, spring_rain_chance, spring_snow_chance, spring_storm_chance, summer_rain_chance, summer_snow_chance, summer_storm_chance, fall_rain_chance, fall_snow_chance, fall_storm_chance, winter_rain_chance, winter_snow_chance, winter_storm_chance FROM game_weather");
-
-    if (!result)
-    {
-        sLog->outString();
-        sLog->outErrorDb(">> Loaded 0 weather definitions. DB table game_weather is empty.");
-        return;
-    }
-
-    do
-    {
-        Field *fields = result->Fetch();
-
-        uint32 zone_id = fields[0].GetUInt32();
-
-        WeatherZoneChances& wzc = mWeatherZoneMap[zone_id];
-
-        for (int season = 0; season < WEATHER_SEASONS; ++season)
-        {
-            wzc.data[season].rainChance  = fields[season * (MAX_WEATHER_TYPE-1) + 1].GetUInt32();
-            wzc.data[season].snowChance  = fields[season * (MAX_WEATHER_TYPE-1) + 2].GetUInt32();
-            wzc.data[season].stormChance = fields[season * (MAX_WEATHER_TYPE-1) + 3].GetUInt32();
-
-            if (wzc.data[season].rainChance > 100)
-            {
-                wzc.data[season].rainChance = 25;
-                sLog->outErrorDb("Weather for zone %u season %u has wrong rain chance > 100%", zone_id, season);
-            }
-
-            if (wzc.data[season].snowChance > 100)
-            {
-                wzc.data[season].snowChance = 25;
-                sLog->outErrorDb("Weather for zone %u season %u has wrong snow chance > 100%", zone_id, season);
-            }
-
-            if (wzc.data[season].stormChance > 100)
-            {
-                wzc.data[season].stormChance = 25;
-                sLog->outErrorDb("Weather for zone %u season %u has wrong storm chance > 100%", zone_id, season);
-            }
-        }
-
-        ++count;
-    } while (result->NextRow());
-
-    sLog->outString();
-    sLog->outString(">> Loaded %u weather definitions", count);
 }
 
 void ObjectMgr::SaveCreatureRespawnTime(uint32 loguid, uint32 instance, time_t t)
