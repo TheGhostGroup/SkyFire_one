@@ -65,8 +65,7 @@ int32 ReputationMgr::GetBaseReputation(FactionEntry const* factionEntry) const
             (factionEntry->BaseRepRaceMask[i] == 0  &&
              factionEntry->BaseRepClassMask[i] != 0)) &&
             (factionEntry->BaseRepClassMask[i] & classMask ||
-             factionEntry->BaseRepClassMask[i] == 0)
-)
+             factionEntry->BaseRepClassMask[i] == 0))
             return factionEntry->BaseRepValue[i];
     }
 
@@ -119,8 +118,7 @@ uint32 ReputationMgr::GetDefaultStateFlags(FactionEntry const* factionEntry) con
             (factionEntry->BaseRepRaceMask[i] == 0  &&
              factionEntry->BaseRepClassMask[i] != 0)) &&
             (factionEntry->BaseRepClassMask[i] & classMask ||
-             factionEntry->BaseRepClassMask[i] == 0)
-)
+             factionEntry->BaseRepClassMask[i] == 0))
             return factionEntry->ReputationFlags[i];
     }
     return 0;
@@ -147,7 +145,6 @@ void ReputationMgr::SendState(FactionState const* faction) const
 
         WorldPacket data(SMSG_SET_FACTION_STANDING, (16));  // last check 2.4.0
         data << (float) 0;                                  // unk 2.4.0
-        data << (uint8) 0;                                  // wotlk 8634
 
         size_t p_count = data.wpos();
         data << (uint32) count;                             // placeholder
@@ -451,7 +448,7 @@ void ReputationMgr::LoadFromDB(QueryResult_AutoPtr result)
     // Set initial reputations (so everything is nifty before DB data load)
     Initialize();
 
-    //QueryResult *result = CharacterDatabase.PQuery("SELECT faction, standing, flags FROM character_reputation WHERE guid = '%u'", GetGUIDLow());
+    //QueryResult *result = CharacterDatabase.PQuery("SELECT faction, standing, flags FROM character_reputation WHERE guid = '%u'", m_player->GetGUIDLow());
 
     if (result)
     {
@@ -476,14 +473,14 @@ void ReputationMgr::LoadFromDB(QueryResult_AutoPtr result)
                 uint32 dbFactionFlags = fields[2].GetUInt32();
 
                 if (dbFactionFlags & FACTION_FLAG_VISIBLE)
-                    SetVisible(faction);                    // have internal checks for forced invisibility
+                    SetVisible(faction);                     // have internal checks for forced invisibility
 
                 if (dbFactionFlags & FACTION_FLAG_INACTIVE)
                     SetInactive(faction, true);              // have internal checks for visibility requirement
 
-                if (dbFactionFlags & FACTION_FLAG_AT_WAR)  // DB at war
+                if (dbFactionFlags & FACTION_FLAG_AT_WAR)    // DB at war
                     SetAtWar(faction, true);                 // have internal checks for FACTION_FLAG_PEACE_FORCED
-                else                                        // DB not at war
+                else                                         // DB not at war
                 {
                     // allow remove if visible (and then not FACTION_FLAG_INVISIBLE_FORCED or FACTION_FLAG_HIDDEN)
                     if (faction->Flags & FACTION_FLAG_VISIBLE)
