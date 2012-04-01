@@ -315,7 +315,7 @@ class WorldSession
         void HandleSetFactionAtWar(WorldPacket & recv_data);
         void HandleSetFactionCheat(WorldPacket & recv_data);
         void HandleSetWatchedFactionOpcode(WorldPacket & recv_data);
-        void HandleSetWatchedFactionInactiveOpcode(WorldPacket & recv_data);
+        void HandleSetFactionInactiveOpcode(WorldPacket & recv_data);
 
         void HandleUpdateAccountData(WorldPacket& recvPacket);
         void HandleRequestAccountData(WorldPacket& recvPacket);

@@ -815,7 +815,7 @@ OpcodeHandler opcodeTable[NUM_MSG_TYPES] =
     /*0x314*/ { "SMSG_GAMETIMEBIAS_SET",           STATUS_NEVER,    &WorldSession::Handle_ServerSide               },
     /*0x315*/ { "CMSG_DEBUG_ACTIONS_START",        STATUS_NEVER,    &WorldSession::Handle_NULL                     },
     /*0x316*/ { "CMSG_DEBUG_ACTIONS_STOP",         STATUS_NEVER,    &WorldSession::Handle_NULL                     },
-    /*0x317*/ { "CMSG_SET_FACTION_INACTIVE",       STATUS_LOGGEDIN, &WorldSession::HandleSetWatchedFactionInactiveOpcode},
+    /*0x317*/ { "CMSG_SET_FACTION_INACTIVE",       STATUS_LOGGEDIN, &WorldSession::HandleSetFactionInactiveOpcode},
     /*0x318*/ { "CMSG_SET_WATCHED_FACTION",        STATUS_LOGGEDIN, &WorldSession::HandleSetWatchedFactionOpcode},
     /*0x319*/ { "MSG_MOVE_TIME_SKIPPED",           STATUS_NEVER,    &WorldSession::Handle_NULL                     },
     /*0x31A*/ { "SMSG_SPLINE_MOVE_ROOT",           STATUS_NEVER,    &WorldSession::Handle_ServerSide               },

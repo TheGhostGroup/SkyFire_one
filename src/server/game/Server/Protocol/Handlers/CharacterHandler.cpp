@@ -781,7 +781,7 @@ void WorldSession::HandleSetWatchedFactionOpcode(WorldPacket & recv_data)
     GetPlayer()->SetUInt32Value(PLAYER_FIELD_WATCHED_FACTION_INDEX, fact);
 }
 
-void WorldSession::HandleSetWatchedFactionInactiveOpcode(WorldPacket & recv_data)
+void WorldSession::HandleSetFactionInactiveOpcode(WorldPacket & recv_data)
 {
     sLog->outDebug("WORLD: Received CMSG_SET_FACTION_INACTIVE");
     uint32 replistid;
